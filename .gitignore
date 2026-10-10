@@ -18,3 +18,7 @@ static/audio
 *.sav
 test/fixtures/unbound/*
 !test/fixtures/unbound/README.md
+# Local secrets (sync key, Dropbox link) - never committed; see .env.example
+.env
+.env.*
+!.env.example

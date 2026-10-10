@@ -53,12 +53,13 @@
 
   import ThemeToggle from '$lib/components/theme-toggle.svelte'
   import { Icon, Logo, Button, Popover } from '$lib/components/core'
-  import { Box, Save, Game, Grave, Caret, CaretRight, Dots } from '$icons'
+  import { Box, Save, Game, Grave, Sync, Caret, CaretRight, Dots } from '$icons'
 
-  const pages = [
+  $: pages = [
     { name: 'Game', link: '/game', icon: Game },
     { name: 'Box', link: '/box', icon: Box },
-    { name: 'Grave', link: '/graveyard', icon: Grave }
+    { name: 'Grave', link: '/graveyard', icon: Grave },
+    ...(game?.game?.startsWith('unbound') ? [{ name: 'Sync', link: '/sync', icon: Sync }] : [])
   ]
 </script>
 

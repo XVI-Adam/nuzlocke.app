@@ -55,6 +55,7 @@ export const deleteGame = (id) => {
   if (!window.confirm('This will delete all data, are you sure?')) return
 
   localStorage.removeItem(IDS.game(id))
+  localStorage.removeItem(`${IDS.game(id)}.unbound`) // see $lib/unbound/baseline
   savedGames.update((g) => {
     if (!id)
       return g

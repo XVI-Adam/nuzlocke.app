@@ -102,6 +102,7 @@ export { default as Download } from '@iconify-icons/tabler/download'
 // UI Icons - Route types
 // Forest,Town/City,Ruins/Tunnel,Mountain,Route
 export { default as Grave } from '@iconify-icons/tabler/grave-2'
+export { default as Sync } from '@iconify-icons/ri/refresh-line'
 export { default as Town } from '@iconify-icons/tabler/home' // Shrine
 export { default as Mountain } from '@iconify-icons/tabler/mountain' // Mt. / Mountain
 // Weather effects & Battle status
