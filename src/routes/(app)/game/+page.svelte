@@ -26,8 +26,11 @@
     parse
   } from '$lib/store'
 
-  let gameStore, gameKey, gameData
+  let gameStore, gameKey, gameData, runId
   let routeEl
+
+  // Unbound-only save panel, loaded on demand so other games are unaffected
+  const loadLivePanel = () => import('$lib/components/Unbound/LivePanel.svelte')
 
   let search = ''
 
@@ -90,6 +93,7 @@
 
       gameStore = getGameStore(id)
       gameKey = key
+      runId = id
 
       fetchRoute(Games[key].pid).then((r) => {
         console.timeEnd('setup')
@@ -150,6 +154,12 @@
           class="flex snap-y snap-start snap-always flex-col items-start justify-between gap-y-4 pt-14 md:mb-6 md:flex-row md:pt-14 lg:gap-y-0"
         >
           <div class="flex w-full flex-col gap-y-2">
+            {#if gameKey?.startsWith('unbound')}
+              {#await loadLivePanel() then { default: LivePanel }}
+                <LivePanel {runId} {gameKey} />
+              {/await}
+            {/if}
+
             {#if filter === 'nuzlocke'}
               <button
                 transition:slide={{ duration: 250 }}

@@ -8,4 +8,4 @@ script against a newer PUSE checkout instead. See the script header for
 the exact patches applied.
 
 Modules: bag.js, balls.js, battlePreview.js, binary.js, catalog.js, checksum.js, gameProgress.js, growth.js, levelCap.js, money.js, party.js, pc.js, sections.js, speciesForms.js
-Data: abilitiesCatalog.json, itemPocketMap.json, speciesAbilitiesMeta.json, speciesBaseStats.json, speciesFormAliases.json, speciesGrowthRates.json, speciesIdentityMeta.json, unboundLevelCaps.json, names.data.js
+Data: abilitiesCatalog.json, itemPocketMap.json, speciesAbilitiesMeta.json, speciesBaseStats.json, speciesConstants.json, speciesFormAliases.json, speciesGrowthRates.json, speciesIdentityMeta.json, unboundLevelCaps.json, names.data.js

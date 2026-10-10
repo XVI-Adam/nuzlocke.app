@@ -1,6 +1,11 @@
 // Compares two save snapshots (from parse.js) and describes what changed.
 // Purely informational: nothing here writes tracker data. In particular a mon
 // entering the graveyard box is reported as a *possible* death only.
+import { describeSpecies } from './species.js'
+
+// Names come from the species id, not the stored name, so snapshots saved by
+// older schema versions (e.g. "Gyarados (Form 1)") display consistently
+const speciesLabel = (m) => describeSpecies(m.species.id).label
 
 export const DEFAULT_GRAVEYARD_BOX = 24
 
@@ -30,7 +35,8 @@ const withLocation = (snapshot) => [
 const brief = (m) => ({
   pid: m.pid,
   nickname: m.nickname,
-  species: m.species.name,
+  speciesId: m.species.id,
+  species: speciesLabel(m),
   level: m.level,
   location: m.location
 })
@@ -67,7 +73,7 @@ export function diffSnapshots(prev, next, { graveyardBox = DEFAULT_GRAVEYARD_BOX
       continue
     }
     if (old.species.id !== m.species.id)
-      evolved.push({ ...brief(m), from: old.species.name, to: m.species.name })
+      evolved.push({ ...brief(m), from: speciesLabel(old), to: speciesLabel(m) })
     if (old.level !== m.level) leveled.push({ ...brief(m), from: old.level, to: m.level })
     if (old.location !== m.location) {
       moved.push({ ...brief(m), from: old.location, to: m.location })

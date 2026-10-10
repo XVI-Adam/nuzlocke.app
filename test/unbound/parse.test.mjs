@@ -188,6 +188,8 @@ test('fixture saves parse with consistent, plausible data', { skip: noFixtures }
     const otId = ((s.trainer.secretId << 16) | s.trainer.id) >>> 0
     for (const m of allMons(s)) assert.equal(m.otId, otId, `${f}: ${m.nickname} not owned by trainer`)
     assert.deepEqual(JSON.parse(JSON.stringify(s)), s, f)
+    for (const m of s.party) assert.ok([null, 'sleep', 'poison', 'burn', 'freeze', 'paralysis', 'toxic'].includes(m.status), `${f}: status ${m.status}`)
+    for (const m of allMons(s)) assert.ok(m.species.label && m.species.name, `${f}: unnamed species ${m.species.id}`)
   }
 })
 
@@ -205,7 +207,7 @@ test('fixture saves match their recorded expected values', { skip: noFixtures ||
       party: s.party.map((m) => m.nickname),
       boxes: Object.fromEntries(s.boxes.filter((b) => b.mons.length).map((b) => [b.box, b.mons.map((m) => m.nickname)])),
       mons: Object.fromEntries(
-        allMons(s).map((m) => [hex(m.pid), { species: m.species.name, level: m.level, met: m.met }])
+        allMons(s).map((m) => [hex(m.pid), { species: m.species.label, level: m.level, met: m.met }])
       )
     }
     assert.deepEqual(got, want, f)

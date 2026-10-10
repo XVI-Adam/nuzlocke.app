@@ -9,10 +9,15 @@ import { parseUnboundSave } from '../../src/lib/unbound/parse.js'
 
 // ---- Synthetic snapshots ---------------------------------------------------
 
+// Real Unbound species ids, so names resolve through the species table
+const ID = {
+  Rattata: 19, Pidgey: 16, Zubat: 41, Gastly: 92, Haunter: 93, Eevee: 133, Vaporeon: 134,
+  Phanpy: 231, Larvitar: 246, Pupitar: 247, Sandshrew: 27, 'Alolan Sandshrew': 1023, Gyarados: 130
+}
 const mon = (pid, species, level, extra = {}) => ({
   pid,
   nickname: `Mon${pid}`,
-  species: { id: species.length, name: species },
+  species: { id: ID[species], name: species },
   level,
   hp: { current: 10, max: 10 },
   ...extra
@@ -90,6 +95,15 @@ test('a mon taken back out of the graveyard is reported', () => {
 test('lists fainted party members', () => {
   const next = snapshot({ saveIndex: 11, party: [mon(1, 'Eevee', 10, { hp: { current: 0, max: 30 } })] })
   assert.deepEqual(diffSnapshots(snapshot(), next).fainted.map((m) => m.pid), [1])
+})
+
+test('names come from the species id, so old baselines show corrected names', () => {
+  // A schema-1 baseline stored PUSE's positional label
+  const legacy = snapshot({ party: [{ ...mon(1, 'Gyarados', 30), species: { id: 130, name: 'Gyarados (Form 1)' } }] })
+  const next = snapshot({ saveIndex: 11, party: [mon(1, 'Gyarados', 31), mon(2, 'Alolan Sandshrew', 12)] })
+  const d = diffSnapshots(legacy, next)
+  assert.deepEqual(d.leveled.map((m) => m.species), ['Gyarados'])
+  assert.deepEqual(d.caught.map((m) => [m.species, m.speciesId]), [['Alolan Sandshrew', 1023]])
 })
 
 test('does not mutate its inputs', () => {

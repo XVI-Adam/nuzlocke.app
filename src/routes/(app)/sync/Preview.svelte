@@ -1,5 +1,9 @@
 <script>
   // Read-only view of a parsed save snapshot
+  import PartyMon from '$lib/components/Unbound/PartyMon.svelte'
+  import MonIcon from '$lib/components/Unbound/MonIcon.svelte'
+  import { describeSpecies } from '$lib/unbound/species'
+
   export let snapshot,
     capProfile = 'normal',
     graveyardBox = 24
@@ -34,41 +38,24 @@
 
   <div>
     <h3 class="mb-2 font-bold">Party</h3>
-    <ul class="grid gap-2 sm:grid-cols-2">
-      {#each party as m (m.pid)}
-        <li class="rounded-lg border-2 border-gray-300 px-3 py-2 text-sm dark:border-gray-600">
-          <div class="flex items-baseline justify-between gap-x-2">
-            <span>
-              <b>{m.nickname}</b>
-              {#if m.nickname !== m.species.name}<span class="opacity-60">({m.species.name})</span>{/if}
-              {#if m.shiny}<span title="Shiny">✦</span>{/if}
-            </span>
-            <span class:text-red-500={m.level > cap}>Lv {m.level}</span>
-          </div>
-          <div class="mt-1 h-1.5 w-full rounded bg-gray-200 dark:bg-gray-700">
-            <div
-              class="h-1.5 rounded"
-              class:bg-green-500={m.hp.current / m.hp.max > 0.5}
-              class:bg-yellow-500={m.hp.current / m.hp.max <= 0.5 && m.hp.current / m.hp.max > 0.2}
-              class:bg-red-500={m.hp.current / m.hp.max <= 0.2}
-              style="width: {(100 * m.hp.current) / m.hp.max}%"
-            />
-          </div>
-          <div class="mt-1 text-xs opacity-75">
-            HP {m.hp.current}/{m.hp.max} · {m.ability} · {m.nature}{m.item ? ` · @${m.item}` : ''}
-          </div>
-          <div class="text-xs opacity-75">{m.moves.join(' / ')}</div>
-        </li>
+    <div class="grid gap-2 sm:grid-cols-2">
+      {#each party as mon (mon.pid)}
+        <PartyMon {mon} {cap} />
       {/each}
-    </ul>
+    </div>
   </div>
 
   <div>
     <h3 class="mb-2 font-bold">Box {graveyardBox} (graveyard)</h3>
     {#if graveyard.length}
-      <p class="text-sm">
-        {graveyard.map((m) => `${m.nickname} (${m.species.name}, Lv ${m.level})`).join(', ')}
-      </p>
+      <ul class="flex flex-wrap gap-2 text-sm">
+        {#each graveyard as m (m.pid)}
+          <li class="inline-flex items-center gap-x-1 pr-2">
+            <MonIcon speciesId={m.species.id} shiny={m.shiny} className="grayscale" />
+            <span>{m.nickname} <span class="opacity-60">{describeSpecies(m.species.id).label} · Lv {m.level}</span></span>
+          </li>
+        {/each}
+      </ul>
     {:else}
       <p class="text-sm opacity-60">Empty</p>
     {/if}
@@ -77,11 +64,19 @@
   {#if stored.length}
     <details>
       <summary class="cursor-pointer font-bold">Other boxes ({boxTotal})</summary>
-      <ul class="mt-2 text-sm">
-        {#each stored as b (b.box)}
-          <li><span class="opacity-60">Box {b.box}:</span> {b.mons.map((m) => `${m.nickname} (Lv ${m.level})`).join(', ')}</li>
-        {/each}
-      </ul>
+      {#each stored as b (b.box)}
+        <div class="mt-2 text-sm">
+          <span class="opacity-60">Box {b.box}</span>
+          <ul class="flex flex-wrap">
+            {#each b.mons as m (m.pid)}
+              <li class="inline-flex items-center pr-2" title="{m.nickname} · {describeSpecies(m.species.id).label} · Lv {m.level}">
+                <MonIcon speciesId={m.species.id} shiny={m.shiny} />
+                <span class="text-xs">{m.nickname} <span class="opacity-60">Lv {m.level}</span></span>
+              </li>
+            {/each}
+          </ul>
+        </div>
+      {/each}
     </details>
   {/if}
 </section>

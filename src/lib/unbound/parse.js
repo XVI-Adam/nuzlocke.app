@@ -19,8 +19,10 @@ import {
 import { readMoney } from './vendor/puse/money.js'
 import { ru8, ru16, ru32 } from './vendor/puse/binary.js'
 import names from './vendor/puse/names.data.js'
+import { describeSpecies } from './species.js'
 
-export const SNAPSHOT_SCHEMA = 1
+// 2: species gains form/formKey/label; party mons gain `status`
+export const SNAPSHOT_SCHEMA = 2
 
 // Signatures PUSE can parse (must match UNBOUND_SIGNATURES in vendor sections.js)
 export const SUPPORTED_SIGNATURES = {
@@ -70,6 +72,7 @@ const PARTY_MAX = 6
 
 // Party mons are stored unencrypted in CFRU; misc substruct starts at 0x44
 const PARTY_OT_ID = 0x04
+const PARTY_STATUS = 0x50
 const PARTY_HP = 0x56
 const PARTY_MAX_HP = 0x58
 const PARTY_MET_LOCATION = 0x45
@@ -171,7 +174,7 @@ const invalid = (where, message) =>
   new UnboundSaveError(ERROR_CODES.INVALID_DATA, `${where}: ${message}`)
 
 const checkMon = (mon, where) => {
-  if (!mon.species.id || !SPECIES.has(mon.species.id))
+  if (!mon.species.id || !SPECIES.has(mon.species.id) || !mon.species.name)
     throw invalid(where, `unknown species id ${mon.species.id}`)
   if (!Number.isInteger(mon.level) || mon.level < 1 || mon.level > 100)
     throw invalid(where, `level ${mon.level} out of range`)
@@ -199,6 +202,19 @@ const readPlaytime = (buf) => {
   }
 }
 
+/**
+ * Gen 3 non-volatile status word: bits 0-2 sleep turns, 3 poison, 4 burn,
+ * 5 freeze, 6 paralysis, 7 bad poison. Returns null when healthy and
+ * 'unknown' for bit patterns that aren't a single valid condition.
+ */
+export const decodeStatus = (word) => {
+  const w = word >>> 0
+  if (w === 0) return null
+  if (w <= 0b111) return 'sleep'
+  const flags = { 0x08: 'poison', 0x10: 'burn', 0x20: 'freeze', 0x40: 'paralysis', 0x80: 'toxic' }
+  return flags[w] || 'unknown'
+}
+
 const met = (raw, locationOffset, infoOffset) => ({
   locationId: ru8(raw, locationOffset),
   level: ru16(raw, infoOffset) & 0x7f
@@ -208,7 +224,9 @@ const met = (raw, locationOffset, infoOffset) => ({
 const toMon = (p, raw, { otIdOffset, metLocation, metInfo }) => ({
   pid: p.pid >>> 0,
   otId: ru32(raw, otIdOffset) >>> 0,
-  species: { id: p.species_id, name: p.species_name || SPECIES.get(p.species_id) || null },
+  species: (({ name, form, formKey, label }) => ({ id: p.species_id, name, form, formKey, label }))(
+    describeSpecies(p.species_id)
+  ),
   nickname: p.nickname,
   level: p.level,
   nature: p.nature || null,
@@ -241,7 +259,8 @@ const readParty = (buf) => {
         metLocation: PARTY_MET_LOCATION,
         metInfo: PARTY_MET_INFO
       }),
-      hp: { current: ru16(raw, PARTY_HP), max: ru16(raw, PARTY_MAX_HP) }
+      hp: { current: ru16(raw, PARTY_HP), max: ru16(raw, PARTY_MAX_HP) },
+      status: decodeStatus(ru32(raw, PARTY_STATUS))
     }
     return checkMon(mon, `Party slot ${i + 1}`)
   })

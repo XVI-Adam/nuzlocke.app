@@ -13,6 +13,9 @@
 //      `decodeText`, which are internal helpers we need for raw-field reads.
 //   3. PUSE's id:name text catalogs (backend/data/*.txt) are emitted as
 //      names.data.js, replacing its fetch-based catalog loader.
+//   4. speciesConstants.json (species id -> SPECIES_* constant), which no
+//      PUSE module imports, is also emitted; $lib/unbound/forms.js uses it
+//      to name alternate forms.
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -65,6 +68,10 @@ const walk = (file) => {
   }
 }
 ENTRY.forEach(walk)
+
+// Data tables we use directly rather than through a PUSE module
+const EXTRA_DATA = ['speciesConstants.json']
+EXTRA_DATA.forEach((f) => jsonFiles.add(f))
 
 fs.rmSync(OUT, { recursive: true, force: true })
 fs.mkdirSync(OUT, { recursive: true })
