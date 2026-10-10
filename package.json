@@ -53,7 +53,6 @@
     "match-sorter": "^6.3.1",
     "pako": "^2.1.0",
     "pokedex-promise-v2": "^3.3.2",
-    "pokemon-sprites": "github:PokeAPI/sprites",
     "prettier": "^2.8.7",
     "prettier-plugin-svelte": "^2.10.0",
     "ramda": "^0.27.1",
