@@ -143,3 +143,29 @@ test('decodes Gen 3 status conditions and flags impossible values', () => {
   assert.equal(decodeStatus(0x18), 'unknown') // poison + burn at once
   assert.equal(decodeStatus(0x100), 'unknown')
 })
+
+// ---- Tracker aliases ------------------------------------------------------------------
+
+test('every tracker alias exists in the app Pokémon data under the same name', async () => {
+  const { APP_POKEMON } = await import('../../tools/build-unbound-species.mjs')
+  const app = new Map(JSON.parse(fs.readFileSync(APP_POKEMON, 'utf8')).map((p) => [p.alias, p.name]))
+  const key = (s) => s.normalize('NFD').replace(/[^A-Za-z0-9]/g, '').toLowerCase()
+  for (const [id, s] of Object.entries(SPECIES)) {
+    if (!s.alias) continue
+    assert.ok(app.has(s.alias), `${id} ${s.alias}`)
+    assert.equal(key(app.get(s.alias)), key(s.name), `${id} ${s.alias}`)
+  }
+})
+
+test('aliases are only assigned where the tracker has that exact form', () => {
+  const alias = (id) => describeSpecies(id).alias
+  assert.equal(alias(130), 'gyarados')
+  assert.equal(alias(880), 'gyarados-mega')
+  assert.equal(alias(1023), 'sandshrew-alola')
+  assert.equal(alias(247), 'pupitar')
+  assert.equal(alias(713), null) // Rotom (Heat): no matching tracker form
+  assert.equal(alias(1043), null) // unreviewed short code
+  assert.equal(alias(252), null) // Egg
+  const thundurus = Object.entries(SPECIES).find(([, s]) => s.name === 'Thundurus' && !s.form)
+  assert.equal(thundurus[1].alias, null) // tracker only has the Therian form
+})

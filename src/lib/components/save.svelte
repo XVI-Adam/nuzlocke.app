@@ -21,6 +21,8 @@
     IDS
   } from '$lib/store'
   import day from '$lib/utils/date'
+  import { buildExport } from '$lib/unbound/side'
+  import { readSide } from '$lib/unbound/baseline'
 
   import { NuzlockeStates } from '$lib/data/states'
   import { Bin, Download, Share } from '$icons'
@@ -64,10 +66,11 @@
       updated
     }
 
+    // Includes `__unbound` (save sync links/baseline) only for runs that have it
     const data =
       `text/json;charset=utf-8,` +
       encodeURIComponent(
-        JSON.stringify({ __meta: meta, ...JSON.parse(gameData || '{}') })
+        JSON.stringify(buildExport(meta, JSON.parse(gameData || '{}'), readSide(id)))
       )
     downloadAnchor.setAttribute('href', 'data:' + data)
     downloadAnchor.setAttribute('download', `Nuzlocke Tracker - ${name}.nzsav`)

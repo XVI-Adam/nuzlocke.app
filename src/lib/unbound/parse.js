@@ -89,6 +89,12 @@ const FLAG_LEARNSET_RANDOMIZER = 0x9fe
 const FLAG_NEW_GAME_PLUS = 0x16db
 const FLAG_SANDBOX_MODE = 0x16e4
 
+// Standard Gen 3 nature order (nature id = PID % 25). PUSE names party natures
+// but gives PC mons only the id; both agree on every fixture mon.
+const NATURE_ORDER = 'Hardy Lonely Brave Adamant Naughty Bold Docile Relaxed Impish Lax Timid Hasty Serious Jolly Naive Modest Mild Quiet Bashful Rash Calm Gentle Sassy Careful Quirky'.split(
+  ' '
+)
+
 const toMap = (obj) => new Map(Object.entries(obj).map(([id, name]) => [+id, name]))
 const SPECIES = toMap(names.species)
 const ITEMS = toMap(names.items)
@@ -229,7 +235,7 @@ const toMon = (p, raw, { otIdOffset, metLocation, metInfo }) => ({
   ),
   nickname: p.nickname,
   level: p.level,
-  nature: p.nature || null,
+  nature: p.nature || NATURE_ORDER[p.nature_id] || null,
   ability: p.effective_ability_name || null,
   item: p.item_id ? ITEMS.get(p.item_id) || `Item #${p.item_id}` : null,
   moves: (p.moves || [])

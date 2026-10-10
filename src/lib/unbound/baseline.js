@@ -1,23 +1,22 @@
-// Per-run storage of the last *accepted* save snapshot, which later syncs are
-// compared against. Kept under its own localStorage key, separate from the
-// run's tracker data, so accepting a snapshot never changes the tracker.
+// Browser storage for the per-run Unbound side key (see side.js for its
+// shape). Kept under its own localStorage key, separate from the run's
+// tracker data, and always written merge-safe so baselines, links and facts
+// never overwrite each other.
 import { IDS } from '$lib/store'
+import { normalizeSide } from './side'
 
-const key = (runId) => `${IDS.game(runId)}.unbound`
+export const sideKey = (runId) => `${IDS.game(runId)}.unbound`
 
-export const readBaseline = (runId) => {
-  if (!runId) return null
+export const readSide = (runId) => {
+  if (!runId) return normalizeSide(null)
   try {
-    return JSON.parse(localStorage.getItem(key(runId)))?.baseline || null
+    return normalizeSide(JSON.parse(localStorage.getItem(sideKey(runId))))
   } catch (e) {
-    console.error('Could not read Unbound baseline', e)
-    return null
+    console.error('Could not read Unbound side data', e)
+    return normalizeSide(null)
   }
 }
 
-/** @param source 'upload' | 'dropbox' */
-export const acceptBaseline = (runId, snapshot, source) => {
-  const baseline = { snapshot, source, acceptedAt: Date.now() }
-  localStorage.setItem(key(runId), JSON.stringify({ baseline }))
-  return baseline
-}
+export const writeSide = (runId, side) => localStorage.setItem(sideKey(runId), JSON.stringify(normalizeSide(side)))
+
+export const readBaseline = (runId) => readSide(runId).baseline

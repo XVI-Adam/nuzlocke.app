@@ -76,6 +76,19 @@ const SPECIFIC = {
 // Icons for base forms the icon sheet names by their (default) form
 const BASE_ICONS = { WISHIWASHI: 'wishiwashi-solo', ENAMORUS: 'enamorus-incarnate' }
 
+// Tracker aliases for base forms the app's data names by their default form
+const BASE_ALIASES = {
+  SHAYMIN: 'shaymin-land',
+  LANDORUS: 'landorus-incarnate',
+  ENAMORUS: 'enamorus-incarnate',
+  KELDEO: 'keldeo-ordinary',
+  MELOETTA: 'meloetta-aria',
+  MEOWSTIC: 'meowstic-male',
+  AEGISLASH: 'aegislash-shield',
+  LYCANROC: 'lycanroc-midday',
+  MORPEKO: 'morpeko-full-belly'
+}
+
 const titleCase = (tokens) => tokens.map((t) => t[0] + t.slice(1).toLowerCase()).join(' ')
 const slug = (tokens) => tokens.join('-').toLowerCase()
 const tokensOf = (constant) => {
@@ -114,13 +127,22 @@ const describeSuffix = (name, suffix, bareConstant) => {
   return { form: `form ${key}`, formKey: key, label: `${name} (form ${key})`, icon: null, formKnown: false }
 }
 
+const comparable = (s) =>
+  String(s || '')
+    .normalize('NFD')
+    .replace(/[^A-Za-z0-9]/g, '')
+    .toLowerCase()
+
 /**
- * @param names      { [id]: display name } from the ROM text table
- * @param constants  { [id]: 'SPECIES_*' }
- * @param iconNames  Set of available icon names (pkm-<name> CSS classes)
- * @returns { [id]: { name, form, formKey, label, icon } }
+ * @param names       { [id]: display name } from the ROM text table
+ * @param constants   { [id]: 'SPECIES_*' }
+ * @param iconNames   Set of available icon names (pkm-<name> CSS classes)
+ * @param appPokemon  the tracker's Pokémon data ([{ alias, name }]); an alias
+ *                    is only assigned when it exists there under the same name
+ * @returns { [id]: { name, form, formKey, label, icon, alias } }
  */
-export function buildSpeciesTable({ names, constants, iconNames }) {
+export function buildSpeciesTable({ names, constants, iconNames, appPokemon = [] }) {
+  const appNames = new Map(appPokemon.map((p) => [p.alias, comparable(p.name)]))
   const ids = new Set([...Object.keys(constants), ...Object.keys(names)].map(Number))
   const entries = [...ids]
     .sort((a, b) => a - b)
@@ -142,7 +164,7 @@ export function buildSpeciesTable({ names, constants, iconNames }) {
   const groups = new Map()
   for (const e of entries) {
     if (isPlaceholder(e.name)) {
-      table[e.id] = { name: null, form: null, formKey: null, label: `Unknown species #${e.id}`, icon: null }
+      table[e.id] = { name: null, form: null, formKey: null, label: `Unknown species #${e.id}`, icon: null, alias: null }
       continue
     }
     if (!groups.has(e.name)) groups.set(e.name, [])
@@ -165,6 +187,9 @@ export function buildSpeciesTable({ names, constants, iconNames }) {
           ? [`${base}-${d.icon}`]
           : []
       const icon = candidates.find((c) => iconNames.has(c)) || null
+      // Tracker alias (e.g. 'sandshrew-alola'): verified to exist with this name
+      const aliasCandidates = suffix.length === 0 ? [...candidates, BASE_ALIASES[e.tokens.join('_')]] : candidates
+      const alias = aliasCandidates.find((c) => c && appNames.get(c) === comparable(name)) || null
 
       table[e.id] = {
         name,
@@ -172,6 +197,7 @@ export function buildSpeciesTable({ names, constants, iconNames }) {
         formKey: d.formKey,
         label: d.label,
         icon,
+        alias,
         ...(d.formKnown === false ? { formKnown: false } : {})
       }
     }

@@ -5,6 +5,8 @@
   import { fly } from 'svelte/transition'
 
   import { updateGame, savedGames, IDS } from '$lib/store'
+  import { splitImport, sanitizeImportedSide } from '$lib/unbound/side'
+  import { writeSide } from '$lib/unbound/baseline'
 
   import { SHARE } from '$utils/rewrites'
   import { Icon, IconButton, Loader } from '$c/core'
@@ -20,8 +22,14 @@
     Desktop
   } from '$icons'
 
-  const importsave = (save, data) => {
+  const importsave = (save, data, unbound) => {
     window.localStorage.setItem(IDS.game(save.id), JSON.stringify(data))
+    // Unbound sync data (newer exports only): links validated against `data`
+    const imported = unbound && sanitizeImportedSide(unbound, data)
+    if (imported) {
+      writeSide(save.id, imported.side)
+      if (imported.rejected.length) console.warn(`Ignored ${imported.rejected.length} invalid Unbound link(s)`, imported.rejected)
+    }
     savedGames.update(updateGame(save))
     close()
     loading = false
@@ -52,8 +60,8 @@
     let reader = new FileReader()
     reader.onload = function (e) {
       try {
-        const { __meta, ...gameData } = JSON.parse(e.currentTarget.result)
-        importsave(__meta, gameData)
+        const { meta, tracker, unbound } = splitImport(JSON.parse(e.currentTarget.result))
+        importsave(meta, tracker, unbound)
       } catch (e) {
         flasherror()
       }

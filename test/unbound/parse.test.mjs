@@ -176,6 +176,7 @@ const expectedFile = path.join(FIXTURES, 'expected.json')
 const expected = fs.existsSync(expectedFile) ? JSON.parse(fs.readFileSync(expectedFile, 'utf8')) : {}
 
 const noFixtures = fixtureFiles.length ? false : 'no fixture saves in test/fixtures/unbound'
+const NATURES = 'Hardy Lonely Brave Adamant Naughty Bold Docile Relaxed Impish Lax Timid Hasty Serious Jolly Naive Modest Mild Quiet Bashful Rash Calm Gentle Sassy Careful Quirky'.split(' ')
 const allMons = (s) => [...s.party, ...s.boxes.flatMap((b) => b.mons)]
 const hex = (n) => n.toString(16).padStart(8, '0')
 
@@ -190,6 +191,7 @@ test('fixture saves parse with consistent, plausible data', { skip: noFixtures }
     assert.deepEqual(JSON.parse(JSON.stringify(s)), s, f)
     for (const m of s.party) assert.ok([null, 'sleep', 'poison', 'burn', 'freeze', 'paralysis', 'toxic'].includes(m.status), `${f}: status ${m.status}`)
     for (const m of allMons(s)) assert.ok(m.species.label && m.species.name, `${f}: unnamed species ${m.species.id}`)
+    for (const m of allMons(s)) assert.ok(NATURES.includes(m.nature), `${f}: ${m.nickname} nature ${m.nature}`)
   }
 })
 
@@ -225,6 +227,7 @@ test('fixture saves in order show monotonic progress and stable PIDs', { skip: f
       const next = later.get(m.pid)
       if (!next) continue // released; not an error
       assert.deepEqual(next.met, m.met, `${hex(m.pid)} met data changed`)
+      assert.equal(next.nature, m.nature, `${hex(m.pid)} nature differs between party/PC readings`)
       assert.ok(next.level >= m.level, `${hex(m.pid)} lost levels`)
     }
   }
