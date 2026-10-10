@@ -14,3 +14,7 @@ static/sprites
 static/graves
 static/audio
 .vs
+# Personal Unbound saves and fixture data - kept local, never committed
+*.sav
+test/fixtures/unbound/*
+!test/fixtures/unbound/README.md
