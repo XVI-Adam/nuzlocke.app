@@ -1,45 +1,18 @@
-let pokemon = import.meta.glob(
-  [
-    '/node_modules/pokemon-sprites/sprites/pokemon/*.png',
-    '/node_modules/pokemon-sprites/sprites/pokemon/shiny/*.png',
-  ],
-  {
-    query: '?base64',
-    import: 'default'
-  }
-)
+// Sprites are proxied from PokeAPI's GitHub rather than bundled from the
+// `pokemon-sprites` git dependency (a ~17GB repo that npm clones on install).
+const SPRITES = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon'
 
-const keyToBase64 = async (spriteName, shiny) => {
-  let defaultShinyPath = `/node_modules/pokemon-sprites/sprites/pokemon/shiny/${spriteName}.png`
-  let defaultPath = `/node_modules/pokemon-sprites/sprites/pokemon/${spriteName}.png`;
+export async function GET({ params, fetch }) {
+  const { id, variant } = params
+  const path = variant === 'shiny' ? `shiny/${id}` : id
 
-  let sprite = null;
+  const res = await fetch(`${SPRITES}/${path}.png`)
+  if (!res.ok) return new Response(null, { status: 404 })
 
-  if(shiny) {
-    sprite = pokemon[defaultShinyPath];
-  } else {
-    sprite = pokemon[defaultPath];
-  }
-
-  if(!sprite) return null;
-
-  return await sprite();
-}
-
-export async function GET({ params }) {
-
-  const {id, variant} = params;
-
-  let shiny = false;
-  if(variant === 'shiny') {
-    shiny = true;
-  }
-
-  let sprite = await keyToBase64(id, shiny);
-
-  return new Response(Buffer.from(sprite, 'base64'), {
+  return new Response(await res.arrayBuffer(), {
     headers: {
-      'Content-Type': 'image/png'
+      'Content-Type': 'image/png',
+      'Cache-Control': 'public, max-age=86400, s-maxage=31536000, immutable'
     }
-  });
+  })
 }
