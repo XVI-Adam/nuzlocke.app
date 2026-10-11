@@ -73,5 +73,11 @@
       </a>
     </div>
 
+    <div class='flex flex-row flex-wrap justify-center gap-x-4 text-sm mx-auto'>
+      <a class='underline' href="/history">Attempt history</a>
+      <a class='underline' href="/notes">Notes</a>
+      <a class='underline' href="/backup">Backup &amp; restore</a>
+    </div>
+
   </ScreenContainer>
 </Modal>

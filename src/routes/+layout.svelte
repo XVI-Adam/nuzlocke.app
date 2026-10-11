@@ -47,6 +47,13 @@
     --input-bg: theme('colors.gray.800');
   }
 
+  /* The footer is absolutely positioned against the first screen, which suits
+     short pages. Long form pages (marked .nz-page) keep it after the content
+     so it never covers buttons or messages */
+  body:has(.nz-page) footer {
+    position: static !important;
+  }
+
   /* latin */
   @font-face {
     font-family: 'VT323';

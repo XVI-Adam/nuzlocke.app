@@ -23,6 +23,7 @@
   import day from '$lib/utils/date'
   import { buildExport } from '$lib/unbound/side'
   import { readSide } from '$lib/unbound/baseline'
+  import { readAttempt } from '$lib/history/attempt'
 
   import { NuzlockeStates } from '$lib/data/states'
   import { Bin, Download, Share } from '$icons'
@@ -66,11 +67,12 @@
       updated
     }
 
-    // Includes `__unbound` (save sync links/baseline) only for runs that have it
+    // Includes `__unbound` (save sync links/baseline) and `__attempt` (notes,
+    // checklist) only for runs that have them
     const data =
       `text/json;charset=utf-8,` +
       encodeURIComponent(
-        JSON.stringify(buildExport(meta, JSON.parse(gameData || '{}'), readSide(id)))
+        JSON.stringify(buildExport(meta, JSON.parse(gameData || '{}'), readSide(id), readAttempt(localStorage, id).attempt))
       )
     downloadAnchor.setAttribute('href', 'data:' + data)
     downloadAnchor.setAttribute('download', `Nuzlocke Tracker - ${name}.nzsav`)

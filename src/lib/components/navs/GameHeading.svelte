@@ -1,12 +1,5 @@
 <script>
-  import {
-    activeGame,
-    savedGames,
-    updateGame,
-    parse,
-    readdata,
-    getGameStore
-  } from '$lib/store'
+  import { activeGame, savedGames, parse } from '$lib/store'
   import { fade, fly } from 'svelte/transition'
 
   import { browser } from '$app/environment'
@@ -31,35 +24,16 @@
     window.location.reload()
   }
 
-  const reset = (_) => {
-    if (
-      !window.confirm(
-        "This will reset all data for this run, including your encounters, team & box. You cannot recover this data when it's reset. Are you sure?"
-      )
-    )
-      return
-
-    const [, , id] = readdata()
-    const gameStore = getGameStore(id)
-
-    savedGames.update(
-      updateGame({
-        ...game,
-        attempts: +(game?.attempts || 1) + 1
-      })
-    )
-    gameStore.set('{}')
-  }
-
   import ThemeToggle from '$lib/components/theme-toggle.svelte'
   import { Icon, Logo, Button, Popover } from '$lib/components/core'
-  import { Box, Save, Game, Grave, Sync, Caret, CaretRight, Dots } from '$icons'
+  import { Box, Save, Game, Grave, Sync, File, Caret, CaretRight, Dots } from '$icons'
 
   $: pages = [
     { name: 'Game', link: '/game', icon: Game },
     { name: 'Box', link: '/box', icon: Box },
     { name: 'Grave', link: '/graveyard', icon: Grave },
-    ...(game?.game?.startsWith('unbound') ? [{ name: 'Sync', link: '/sync', icon: Sync }] : [])
+    ...(game?.game?.startsWith('unbound') ? [{ name: 'Sync', link: '/sync', icon: Sync }] : []),
+    { name: 'Notes', link: '/notes', icon: File }
   ]
 </script>
 
@@ -144,14 +118,14 @@
               </button>
             {/each}
 
-            <li class="px-4 py-3 text-center">
-              <Button on:click={reset} rounded solid class="w-full text-sm"
-                >New Attempt</Button
-              >
-              <p class="pt-2 text-xs italic leading-4 opacity-50">
-                Abandon your <b>{game?.name || ''}</b> run, reset all encounters
-                and start attempt {+(game?.attempts || 1) + 1}
+            <li class="flex flex-col gap-y-2 px-4 py-3 text-center">
+              <a href="/history/new-attempt" data-testid="new-attempt">
+                <Button rounded solid class="w-full text-sm">New Attempt</Button>
+              </a>
+              <p class="text-xs italic leading-4 opacity-50">
+                Archive your <b>{game?.name || ''}</b> run and start attempt {+(game?.attempts || 1) + 1}
               </p>
+              <a href="/history" class="text-sm underline">Attempt history</a>
             </li>
           </ul>
         </Popover>
@@ -164,13 +138,11 @@
       <ThemeToggle />
 
       {#each pages as p}
-        <a
-          class="link"
-          class:active={p.link == $page.url.pathname}
-          href={p.link}
-        >
+        {@const active = p.link == $page.url.pathname}
+        <!-- Icon-only on narrow screens (except the current page) so all links fit -->
+        <a class="link" class:active href={p.link} aria-label={p.name} title={p.name}>
           <Icon inline={true} icon={p.icon} />
-          {p.name}
+          <span class:hidden={!active} class="xl:inline">{p.name}</span>
         </a>
       {/each}
     </span>

@@ -7,6 +7,7 @@
   import { updateGame, savedGames, IDS } from '$lib/store'
   import { splitImport, sanitizeImportedSide } from '$lib/unbound/side'
   import { writeSide } from '$lib/unbound/baseline'
+  import { normalizeAttempt, isEmptyAttempt, writeAttempt } from '$lib/history/attempt'
 
   import { SHARE } from '$utils/rewrites'
   import { Icon, IconButton, Loader } from '$c/core'
@@ -22,7 +23,7 @@
     Desktop
   } from '$icons'
 
-  const importsave = (save, data, unbound) => {
+  const importsave = (save, data, unbound, attempt) => {
     window.localStorage.setItem(IDS.game(save.id), JSON.stringify(data))
     // Unbound sync data (newer exports only): links validated against `data`
     const imported = unbound && sanitizeImportedSide(unbound, data)
@@ -30,6 +31,8 @@
       writeSide(save.id, imported.side)
       if (imported.rejected.length) console.warn(`Ignored ${imported.rejected.length} invalid Unbound link(s)`, imported.rejected)
     }
+    // Attempt notes/checklist (newer exports only)
+    if (attempt && !isEmptyAttempt(normalizeAttempt(attempt))) writeAttempt(localStorage, save.id, attempt)
     savedGames.update(updateGame(save))
     close()
     loading = false
@@ -60,8 +63,8 @@
     let reader = new FileReader()
     reader.onload = function (e) {
       try {
-        const { meta, tracker, unbound } = splitImport(JSON.parse(e.currentTarget.result))
-        importsave(meta, tracker, unbound)
+        const { meta, tracker, unbound, attempt } = splitImport(JSON.parse(e.currentTarget.result))
+        importsave(meta, tracker, unbound, attempt)
       } catch (e) {
         flasherror()
       }

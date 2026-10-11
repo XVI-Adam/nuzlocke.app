@@ -7,7 +7,8 @@
     forceLevelCap = false,
     forceVs = false,
     defeated = false,
-    reader = false
+    reader = false,
+    notes = null // { href, count, open() }: this boss's notes ($lib/history/knowledge)
 
   // Core leaader data
   let pokemon = [],
@@ -36,7 +37,7 @@
   import { Picture, Icon, PIcon, IconButton, Accordion, Tooltip } from '$c/core'
   import { Wrapper as SettingWrapper } from '$lib/components/Settings'
 
-  import { Loop as Badge, Ball, Info } from '$icons'
+  import { Loop as Badge, Ball, Info, Edit } from '$icons'
   import { Vs } from '$lib/components/BossBattle'
   import { bossToImage } from '$utils/rewrites'
 
@@ -231,6 +232,22 @@
             </SettingWrapper>
           {/if}
 
+          {#if notes}
+            <!-- Same pattern as the VS button: IconButton stops the click
+                 from toggling the card -->
+            <IconButton
+              on:click={() => (notes.open ? notes.open() : (window.location = notes.href))}
+              title="Notes for {[boss.name, location].filter(Boolean).join(' · ')}{notes.count ? ` (${notes.count} ${notes.count === 1 ? 'note' : 'notes'})` : ''}"
+              class="notes-btn relative h-12 w-12 md:mt-1"
+              rounded
+            >
+              <span slot="icon" class="inline-flex items-center justify-center" class:has-notes={notes.count}>
+                <Icon inline icon={Edit} class="m-2 fill-current" />
+                {#if notes.count}<span class="count" data-testid="boss-notes-count">{notes.count}</span>{/if}
+              </span>
+            </IconButton>
+          {/if}
+
           {#if forceVs}
             <IconButton
               on:click={openBuilder}
@@ -292,3 +309,16 @@
     </div>
   </Accordion>
 </div>
+
+<style lang="postcss">
+  /* Notes count on the boss card's Notes button */
+  .has-notes {
+    @apply text-orange-600;
+  }
+  :global(.dark) .has-notes {
+    @apply text-orange-400;
+  }
+  .count {
+    @apply absolute -top-1 -right-1 min-w-[1.1rem] rounded-full bg-orange-500 px-1 text-[0.65rem] font-bold leading-4 text-white;
+  }
+</style>

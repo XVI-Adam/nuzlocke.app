@@ -9,6 +9,7 @@
   import { readSide, writeSide } from '$lib/unbound/baseline'
   import { diffSnapshots, DIFF_STATUS, DEFAULT_GRAVEYARD_BOX } from '$lib/unbound/diff'
   import { planReconciliation, applyReconciliation } from '$lib/unbound/reconcile'
+  import { isWritableRun } from '$lib/history/archive'
 
   import Preview from './Preview.svelte'
   import Changes from './Changes.svelte'
@@ -93,6 +94,10 @@
   }
 
   const accept = () => {
+    if (!isWritableRun(localStorage, runId)) {
+      error = 'This attempt is no longer the active run (it may have been archived). Reload the page before syncing.'
+      return
+    }
     if (CONFIRM[diff.status] && !window.confirm(CONFIRM[diff.status])) return
 
     // One tracker write, planned against the latest stored data
@@ -126,7 +131,7 @@
   <title>Nuzlocke Tracker | Sync save</title>
 </svelte:head>
 
-<div class="container mx-auto pb-24" in:fade={{ duration: 250 }}>
+<div class="nz-page container mx-auto pb-24" in:fade={{ duration: 250 }}>
   <main class="p-container flex flex-col gap-y-6 pt-20 md:pt-24">
     <header>
       <h1 class="text-2xl font-bold">Sync save</h1>

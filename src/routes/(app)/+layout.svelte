@@ -74,7 +74,7 @@
   classWindow="!bg-transparent"
   classContent="!p-0 !overflow-visible"
 >
-  {#if ['/game', '/box', '/graveyard', '/sync'].includes(path)}
+  {#if ['/game', '/box', '/graveyard', '/sync', '/notes'].includes(path)}
     <GameHeading />
   {:else}
     <NavHeading />

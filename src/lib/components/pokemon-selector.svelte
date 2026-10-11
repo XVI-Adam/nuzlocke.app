@@ -4,7 +4,8 @@
     location,
     locationName = '',
     type = '',
-    infolink = ''
+    infolink = '',
+    notes = null // { href, count, open(pokemon) }: this route's notes ($lib/history/knowledge)
 
   import { nonnull, equal as oEqual } from '$utils/obj'
 
@@ -35,12 +36,22 @@
     Dots,
     Map,
     Search,
-    LongGrass
+    LongGrass,
+    Edit
   } from '$icons'
 
   import { createEventDispatcher, onMount, getContext } from 'svelte'
 
   let selected, nickname, status, nature, hidden, death
+
+  // Prefills the Pokémon of a lesson added from the route's notes
+  const notesHref = (n, mon) => (mon?.alias ? `${n.href}&pokemon=${encodeURIComponent(mon.alias)}` : n.href)
+  // Opens the notes panel when the page provides one; the link is the fallback
+  const opennotes = (e) => {
+    if (!notes?.open) return
+    e.preventDefault()
+    notes.open(selected?.alias || '')
+  }
   let prevstatus = 'loading'
 
   // Search text bindings for ACs
@@ -283,6 +294,22 @@
         <slot name="location" />
       {:else}
         {location}
+      {/if}
+      {#if notes}
+        <a
+          href={notesHref(notes, selected)}
+          on:click={opennotes}
+          class="notes-btn"
+          class:has-notes={notes.count}
+          role="button"
+          aria-haspopup="dialog"
+          aria-label="Notes for {locationName || location}{notes.count ? ` (${notes.count})` : ''}"
+          title="Notes for {locationName || location}"
+          data-testid="route-notes"
+        >
+          <Icon inline={true} icon={Edit} class="fill-current" />
+          {#if notes.count}<span>{notes.count}</span>{/if}
+        </a>
       {/if}
     </span>
 
@@ -584,6 +611,15 @@
             </button>
           </li>
 
+          {#if notes}
+            <li>
+              <a href={notesHref(notes, selected)} on:click={opennotes} data-testid="route-notes-menu">
+                <Icon inline={true} icon={Edit} class="mr-2 inline fill-current" />
+                Notes{notes.count ? ` (${notes.count})` : ''}
+              </a>
+            </li>
+          {/if}
+
           <SettingsWrapper id="permadeath" on="1" condition={status?.id === 5}>
             <li slot="else">
               <button on:click={handleClear}>
@@ -686,6 +722,17 @@
 </SettingsWrapper>
 
 <style lang="postcss">
+  /* Notes button next to the location name: always visible (no hover needed),
+     muted until the route has notes */
+  .notes-btn {
+    @apply ml-1 inline-flex h-10 min-w-[2.5rem] items-center md:h-7 md:min-w-[1.75rem] justify-center gap-x-0.5 rounded-md px-1 align-middle text-xs font-normal opacity-40 transition hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-orange-400;
+  }
+  .notes-btn.has-notes {
+    @apply text-orange-600 opacity-90;
+  }
+  :global(.dark) .notes-btn.has-notes {
+    @apply text-orange-400;
+  }
   .dupe {
     @apply mr-2 text-tiny opacity-25 grayscale;
   }

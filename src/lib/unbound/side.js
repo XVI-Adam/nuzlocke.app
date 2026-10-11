@@ -71,22 +71,24 @@ export function validateLinks(links, tracker) {
 
 /**
  * .nzsav export: `{ __meta, ...tracker }` plus `__unbound` when the run has
- * Unbound data. Older app versions ignore unknown top-level keys' contents.
+ * Unbound data and `__attempt` (attempt notes/checklist, $lib/history/attempt)
+ * when it has any. Older app versions ignore unknown top-level keys' contents.
  */
-export const buildExport = (meta, tracker, side) => {
+export const buildExport = (meta, tracker, side, attempt) => {
   const s = normalizeSide(side)
   const hasUnbound = !!s.baseline || Object.keys(s.links).length > 0
-  return { __meta: meta, ...tracker, ...(hasUnbound ? { __unbound: s } : {}) }
+  const hasAttempt = isPlainObject(attempt) && (!!attempt.notes || Object.keys(attempt.checklist || {}).length > 0)
+  return { __meta: meta, ...tracker, ...(hasUnbound ? { __unbound: s } : {}), ...(hasAttempt ? { __attempt: attempt } : {}) }
 }
 
 /**
- * .nzsav import: separates metadata, tracker blob and Unbound data, so
- * `__unbound` can never end up inside the tracker blob. Files from before
- * this change simply have no `__unbound`.
+ * .nzsav import: separates metadata, tracker blob, Unbound data and attempt
+ * notes, so neither can end up inside the tracker blob. Files from before
+ * these were added simply don't have them.
  */
 export const splitImport = (parsed) => {
-  const { __meta, __unbound, ...tracker } = parsed || {}
-  return { meta: __meta, tracker, unbound: __unbound }
+  const { __meta, __unbound, __attempt, ...tracker } = parsed || {}
+  return { meta: __meta, tracker, unbound: __unbound, attempt: __attempt }
 }
 
 /**

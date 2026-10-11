@@ -5,6 +5,7 @@ import { writable } from 'svelte/store'
 import { NuzlockeGroups } from '$lib/data/states'
 import { toObj } from '$lib/utils/obj'
 import { uuid } from '$lib/utils/uuid'
+import { parseSaves, formatSave } from '$lib/history/saves'
 
 import { settingsDefault } from '$lib/components/Settings/_data'
 
@@ -56,6 +57,7 @@ export const deleteGame = (id) => {
 
   localStorage.removeItem(IDS.game(id))
   localStorage.removeItem(`${IDS.game(id)}.unbound`) // see $lib/unbound/baseline
+  localStorage.removeItem(`${IDS.game(id)}.attempt`) // see $lib/history/attempt
   savedGames.update((g) => {
     if (!id)
       return g
@@ -254,43 +256,14 @@ const _read = (payload) => {
 
 export const read = (cb) => (payload) => cb(_read(payload) || {})
 
-const _parse = (gameData) =>
-  (gameData || '')
-    .split(',')
-    .filter((i) => i.length)
-    .map((i) => i.split('|'))
-    .reduce((acc, [id, time, name, game, settings, attempts = 1]) => {
-      const [created, updated] = time.split('>')
-      return {
-        ...acc,
-        [id]: {
-          id,
-          created,
-          ...(updated ? { updated } : {}),
-          name: decodeURIComponent(name),
-          game,
-          settings,
-          attempts
-        }
-      }
-    }, {})
+const _parse = parseSaves
 
 export const parse =
   (cb = () => {}) =>
   (gameData) =>
     cb(_parse(gameData))
 
-export const format = (saveData) =>
-  [
-    saveData.id,
-    saveData.updated
-      ? saveData.created + '>' + saveData.updated
-      : saveData.created,
-    encodeURIComponent(saveData.name),
-    saveData.game,
-    saveData.settings,
-    +saveData.attempts || 1
-  ].join('|')
+export const format = formatSave
 
 export const summarise =
   (cb = (_) => {}) =>

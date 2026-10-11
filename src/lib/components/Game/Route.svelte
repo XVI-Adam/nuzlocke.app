@@ -1,5 +1,5 @@
 <script>
-  import { afterUpdate } from 'svelte'
+  import { afterUpdate, onMount } from 'svelte'
   import { fade } from 'svelte/transition'
   import {
     patch,
@@ -33,6 +33,8 @@
     showCustom
   } from './_predicates'
   import { filterEntry } from './_filters'
+  import { findByRef, noteCount } from '$lib/history/knowledge'
+  import { getNotes } from '$lib/components/History/notes-store'
 
   export let route,
     game,
@@ -43,6 +45,32 @@
   const { store, key, data } = game
 
   let starter = data.__starter || 'fire'
+
+  /** The player's notes for each route/boss card, opened in a side panel */
+  let notes = null,
+    NotesPanel = null,
+    panelTarget = null,
+    panelTrigger = null
+  onMount(() => (notes = getNotes()))
+  const openNotes = (target) => {
+    panelTrigger = document.activeElement
+    import('$lib/components/History/NotesPanel.svelte').then((m) => {
+      NotesPanel = m.default
+      panelTarget = target
+    })
+  }
+  const closeNotes = () => {
+    panelTarget = null
+    panelTrigger?.focus?.()
+  }
+  const notesFor = (n, section, ref, name) =>
+    n && ref
+      ? {
+          href: `/notes?tab=${section}&ref=${encodeURIComponent(ref)}&name=${encodeURIComponent(name || ref)}`,
+          count: noteCount(n.knowledge, section, findByRef(n.knowledge, section, key, ref)),
+          open: (pokemon) => openNotes({ section, ref, name: name || ref, pokemon })
+        }
+      : null
   let element
 
   /** Custom route handlers & Empty routes */
@@ -165,6 +193,7 @@
           {id}
           {store}
           infolink={toDbLocation(key, p.name)}
+          notes={notesFor($notes, 'routes', p.name, p.name)}
           location={p.name}
           encounters={p.encounters}
           on:hide={onhidelocation}
@@ -207,6 +236,7 @@
           game={key}
           id={p.value}
           defeated={bossTeamIds.includes(p.value)}
+          notes={notesFor($notes, 'bosses', p.value, p.boss || p.name)}
           location={p.name}
           type={p.group}
         />
@@ -215,10 +245,33 @@
   {/each}
 </ul>
 
+{#if NotesPanel && panelTarget}
+  <svelte:component this={NotesPanel} target={panelTarget} routeList={route} on:close={closeNotes} />
+{/if}
+
 <style>
   li {
     scroll-margin-top: 28px;
     @apply snap-start;
+  }
+
+  /* Subtle highlight of the card being worked on (focus) or pointed at */
+  li.location,
+  li.boss {
+    border-radius: 0.75rem;
+    transition: background-color 150ms, box-shadow 150ms;
+  }
+  li.location:focus-within,
+  li.boss:focus-within {
+    background-color: rgb(249 115 22 / 0.06);
+    box-shadow: 0 0 0 6px rgb(249 115 22 / 0.06);
+  }
+  @media (hover: hover) {
+    li.location:hover,
+    li.boss:hover {
+      background-color: rgb(127 127 127 / 0.06);
+      box-shadow: 0 0 0 6px rgb(127 127 127 / 0.06);
+    }
   }
 
   @media (min-width: theme('screens.md')) {

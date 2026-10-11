@@ -58,7 +58,7 @@ test('export adds __unbound only when there is Unbound data', () => {
 
 test('import keeps __unbound out of the tracker blob; old exports import unchanged', () => {
   const old = { __meta: { id: 'run' }, ...tracker }
-  assert.deepEqual(splitImport(old), { meta: { id: 'run' }, tracker, unbound: undefined })
+  assert.deepEqual(splitImport(old), { meta: { id: 'run' }, tracker, unbound: undefined, attempt: undefined })
 
   const exported = buildExport({ id: 'run' }, tracker, { baseline, links: { '2:7': 'Route 1' } })
   const { meta, tracker: t, unbound } = splitImport(JSON.parse(JSON.stringify(exported)))
