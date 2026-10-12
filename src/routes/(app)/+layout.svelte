@@ -1,6 +1,6 @@
 <script>
   import { browser, dev } from '$app/environment'
-  import { setContext, afterUpdate } from 'svelte'
+  import { setContext, afterUpdate, onMount } from 'svelte'
 
   import { page } from '$app/stores'
   import { createUser, readdata } from '$lib/store'
@@ -56,6 +56,11 @@
   })
 
   const onresize = () => (document.body.height = window.innerHeight)
+
+  // Cross-device sync runs in the background once this device is connected
+  onMount(() => {
+    import('$lib/sync/client').then((m) => m.start())
+  })
 
   $: createUser()
 </script>

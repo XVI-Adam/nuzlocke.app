@@ -29,15 +29,24 @@
     showDelete = false,
     deleteConfirmed = false
 
-  onMount(() => {
+  const load = () => {
     try {
       const a = readArchive(localStorage, id)
-      if (a) ({ meta, data } = a)
+      ;({ meta, data } = a || { meta: null, data: null })
       knowledge = readKnowledge(localStorage).knowledge
     } catch (e) {
       error = e.message
     }
     loaded = true
+  }
+
+  // Also re-read after changes from another device were synced in (an
+  // edited title, or the attempt deleted elsewhere)
+  onMount(() => {
+    load()
+    const onSynced = () => !form && load()
+    window.addEventListener('nuzlocke:synced', onSynced)
+    return () => window.removeEventListener('nuzlocke:synced', onSynced)
   })
 
   $: stats = data ? summarizeAttempt(data) : null

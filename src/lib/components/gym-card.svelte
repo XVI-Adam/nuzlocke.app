@@ -150,18 +150,6 @@
           {:else}
             <div>
               <h4 class="text-xl font-medium">{name}</h4>
-              {#if img?.author}
-                <a
-                  href={img.link}
-                  target="_blank"
-                  rel="noreferrer"
-                  on:click|stopPropagation={function () {}}
-                  class:mt-6={location}
-                  class="absolute text-tiny italic text-gray-500 transition hover:text-indigo-300 hover:underline dark:text-gray-600 dark:hover:text-indigo-400"
-                >
-                  Sprite by <strong>{img.author}</strong>
-                </a>
-              {/if}
             </div>
           {/if}
 
@@ -199,71 +187,77 @@
           </h5>
         {/if}
       </span>
-
-      <div class="absolute top-0 right-0 inline-flex gap-x-2">
-        {#if loading}
-          <div class="-mt-2 h-14 w-14 animate-pulse rounded-md bg-gray-400" />
-        {:else}
-          <span
-            class:grayscale={defeated}
-            class="hidden items-center gap-x-2 lg:inline-flex"
-          >
-            {#each pokemon as p, i (p.name + i)}
-              <PIcon
-                name={p.icon || p.name}
-                className="-m-4 z-10 relative"
-              />
-            {/each}
-          </span>
-
-          <SettingWrapper id="team-caps" on="1">
-            <Label
-              heading="Max"
-              className="-mr-4"
-              body={Math.min(6, pokemon.length)}
-            />
-          </SettingWrapper>
-
-          {#if levelCap}
-            <SettingWrapper let:setting id="level-caps">
-              {#if (setting === 1 && (type === 'gym-leader' || type === 'elite-four')) || (setting === 2 && (type === 'gym-leader' || type === 'elite-four' || type === 'rival')) || setting === 3 || forceLevelCap}
-                <Label heading="Lvl cap" body={levelCap} />
-              {/if}
-            </SettingWrapper>
-          {/if}
-
-          {#if notes}
-            <!-- Same pattern as the VS button: IconButton stops the click
-                 from toggling the card -->
-            <IconButton
-              on:click={() => (notes.open ? notes.open() : (window.location = notes.href))}
-              title="Notes for {[boss.name, location].filter(Boolean).join(' · ')}{notes.count ? ` (${notes.count} ${notes.count === 1 ? 'note' : 'notes'})` : ''}"
-              class="notes-btn relative h-12 w-12 md:mt-1"
-              rounded
-            >
-              <span slot="icon" class="inline-flex items-center justify-center" class:has-notes={notes.count}>
-                <Icon inline icon={Edit} class="m-2 fill-current" />
-                {#if notes.count}<span class="count" data-testid="boss-notes-count">{notes.count}</span>{/if}
-              </span>
-            </IconButton>
-          {/if}
-
-          {#if forceVs}
-            <IconButton
-              on:click={openBuilder}
-              title="Load team builder against the {boss.name} boss fight"
-              class="h-12 pl-0.5 md:mt-1"
-              rounded
-            >
-              <Vs
-                containerClass="translate-y-3 scale-90"
-                class="bg-white dark:bg-gray-800"
-              />
-            </IconButton>
-          {/if}
-        {/if}
-      </div>
     </span>
+
+    <!-- Outside the accordion's <button>: these are buttons themselves.
+         Clicking the non-interactive parts still opens/closes the card. -->
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <div
+      slot="actions"
+      let:toggle
+      class="absolute top-0 right-0 inline-flex gap-x-2"
+      on:click={(e) => !e.target.closest('button, a') && toggle()}
+    >
+      {#if loading}
+        <div class="-mt-2 h-14 w-14 animate-pulse rounded-md bg-gray-400" />
+      {:else}
+        <span
+          class:grayscale={defeated}
+          class="hidden items-center gap-x-2 lg:inline-flex"
+        >
+          {#each pokemon as p, i (p.name + i)}
+            <PIcon
+              name={p.icon || p.name}
+              className="-m-4 z-10 relative"
+            />
+          {/each}
+        </span>
+
+        <SettingWrapper id="team-caps" on="1">
+          <Label
+            heading="Max"
+            className="-mr-4"
+            body={Math.min(6, pokemon.length)}
+          />
+        </SettingWrapper>
+
+        {#if levelCap}
+          <SettingWrapper let:setting id="level-caps">
+            {#if (setting === 1 && (type === 'gym-leader' || type === 'elite-four')) || (setting === 2 && (type === 'gym-leader' || type === 'elite-four' || type === 'rival')) || setting === 3 || forceLevelCap}
+              <Label heading="Lvl cap" body={levelCap} />
+            {/if}
+          </SettingWrapper>
+        {/if}
+
+        {#if notes}
+          <IconButton
+            on:click={() => (notes.open ? notes.open() : (window.location = notes.href))}
+            title="Notes for {[boss.name, location].filter(Boolean).join(' · ')}{notes.count ? ` (${notes.count} ${notes.count === 1 ? 'note' : 'notes'})` : ''}"
+            class="notes-btn relative h-12 w-12 md:mt-1"
+            rounded
+          >
+            <span slot="icon" class="inline-flex items-center justify-center" class:has-notes={notes.count}>
+              <Icon inline icon={Edit} class="m-2 fill-current" />
+              {#if notes.count}<span class="count" data-testid="boss-notes-count">{notes.count}</span>{/if}
+            </span>
+          </IconButton>
+        {/if}
+
+        {#if forceVs}
+          <IconButton
+            on:click={openBuilder}
+            title="Load team builder against the {boss.name} boss fight"
+            class="h-12 pl-0.5 md:mt-1"
+            rounded
+          >
+            <Vs
+              containerClass="translate-y-3 scale-90"
+              class="bg-white dark:bg-gray-800"
+            />
+          </IconButton>
+        {/if}
+      {/if}
+    </div>
 
     <div
       slot="item"
@@ -308,6 +302,19 @@
       {/each}
     </div>
   </Accordion>
+
+  {#if img?.author && !loading}
+    <!-- Kept out of the header button: links can't be inside a button -->
+    <a
+      href={img.link}
+      target="_blank"
+      rel="noreferrer"
+      class:top-16={location}
+      class="absolute left-20 top-11 text-tiny italic text-gray-500 transition hover:text-indigo-300 hover:underline dark:text-gray-600 dark:hover:text-indigo-400 md:left-44"
+    >
+      Sprite by <strong>{img.author}</strong>
+    </a>
+  {/if}
 </div>
 
 <style lang="postcss">

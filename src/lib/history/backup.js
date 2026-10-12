@@ -29,7 +29,7 @@ export class BackupError extends Error {
 const num = (v) => (v === null || v === undefined || v === '' || !Number.isFinite(+v) ? null : +v)
 
 /** A run-list entry as plain JSON (timestamps as numbers) */
-const saveMeta = (s) => ({
+export const saveMeta = (s) => ({
   id: s.id,
   name: typeof s.name === 'string' ? s.name.slice(0, 200) : '',
   game: s.game,
@@ -39,7 +39,7 @@ const saveMeta = (s) => ({
   updated: num(s.updated)
 })
 
-const toSavesEntry = (m) => ({
+export const toSavesEntry = (m) => ({
   id: m.id,
   created: m.created,
   ...(m.updated ? { updated: m.updated } : {}),

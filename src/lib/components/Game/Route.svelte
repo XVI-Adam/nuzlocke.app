@@ -1,5 +1,5 @@
 <script>
-  import { afterUpdate, onMount } from 'svelte'
+  import { afterUpdate, onMount, tick } from 'svelte'
   import { fade } from 'svelte/transition'
   import {
     patch,
@@ -59,8 +59,9 @@
       panelTarget = target
     })
   }
-  const closeNotes = () => {
+  const closeNotes = async () => {
     panelTarget = null
+    await tick() // the page is no longer inert once the panel is gone
     panelTrigger?.focus?.()
   }
   const notesFor = (n, section, ref, name) =>

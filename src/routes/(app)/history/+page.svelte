@@ -14,7 +14,9 @@
     loaded = false,
     game = 'all'
 
-  onMount(() => {
+  const load = () => {
+    error = null
+    current = null
     try {
       archives = listArchives(localStorage)
     } catch (e) {
@@ -31,6 +33,13 @@
       current = { run, stats }
     }
     loaded = true
+  }
+
+  // Also re-read after changes from another device were synced in
+  onMount(() => {
+    load()
+    window.addEventListener('nuzlocke:synced', load)
+    return () => window.removeEventListener('nuzlocke:synced', load)
   })
 
   $: games = [...new Set(archives.map((a) => a.meta.game).filter(Boolean))]

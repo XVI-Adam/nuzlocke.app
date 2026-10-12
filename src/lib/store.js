@@ -84,6 +84,21 @@ export const getGameStore = (id) => {
   return gameStoreCache[id]
 }
 
+/**
+ * Re-reads the stores above from browser storage after something other than
+ * them wrote it (cross-device sync), so a page that is open never writes its
+ * older in-memory copy back over the newer data.
+ */
+export const reloadFromStorage = () => {
+  if (!browser) return
+  activeGame.set(localStorage.getItem(IDS.active))
+  savedGames.set(localStorage.getItem(IDS.saves))
+  for (const [id, store] of Object.entries(gameStoreCache)) {
+    const raw = localStorage.getItem(IDS.game(id))
+    if (raw) store.set(raw)
+  }
+}
+
 export const createGame =
   (name, game, initData = '{}') =>
   (payload) => {

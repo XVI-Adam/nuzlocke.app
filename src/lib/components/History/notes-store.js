@@ -114,6 +114,9 @@ export function createNotes(storage) {
 let shared = null
 export const getNotes = () => (shared = shared || createNotes(localStorage))
 
+/** After notes changed underneath the page (cross-device sync) */
+export const reloadNotes = () => shared?.reload()
+
 // ---- Labels and form fields shared by the page and the panel
 
 /** Game-page routes or bosses from the route list, as select options */

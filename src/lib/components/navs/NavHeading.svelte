@@ -5,6 +5,7 @@
   import { Home } from '$icons'
 
   import ThemeToggle from '$lib/components/theme-toggle.svelte'
+  import SyncIndicator from '$lib/components/Sync/SyncIndicator.svelte'
 
 </script>
 
@@ -23,7 +24,10 @@
       <span />
     {/if}
 
-    <ThemeToggle className=mt-2 />
+    <span class="inline-flex items-center gap-x-2">
+      <SyncIndicator className="mt-2" />
+      <ThemeToggle className=mt-2 />
+    </span>
   </div>
 </nav>
 

@@ -62,6 +62,55 @@ include the modifications, e.g. `,,100` will modify the defense to
 You can find extensive examples of these in the [Nuzlocke.data](https://github.com/domtronn/nuzlocke.data) project.
 
 
+### Cross-device sync (Unbound companion fork)
+
+Runs, archived attempts, notes, checklists and checklist progress can sync
+between your devices from **Device sync** (`/devices`). It is end-to-end
+encrypted: data is compressed and encrypted (AES-256-GCM, Web Crypto) in the
+browser with a key the server never receives. The server stores only
+ciphertext plus what it needs to sync: item ids (kind + random id), sizes,
+revisions, device names and request times. Theme, user id and the Unbound
+sync key never sync.
+
+**Set up (once, in Vercel)**
+
+1. Storage → Marketplace → *Upstash* → Redis → create a database (free tier
+   is enough) and connect it to this project. This adds `KV_REST_API_URL` and
+   `KV_REST_API_TOKEN` (or `UPSTASH_REDIS_REST_*`) to the environment.
+2. Settings → Environment Variables → add `SYNC_SETUP_KEY` (Production):
+   `openssl rand -base64 36`. It must differ from `UNBOUND_SYNC_KEY`.
+3. Redeploy. Until both are set, `/api/sync/*` answers `503 not-configured`.
+
+**Connect devices**
+
+1. First device: Device sync → *setup key* → review the preview → *Connect
+   and sync*. Save the **recovery key** it shows in a password manager.
+2. Other devices: on a connected device, *Create a pairing code* (single use,
+   15 minutes; it contains the encryption key) and enter it on the new device.
+   Without another device: setup key + recovery key.
+3. Every first connection shows what would be downloaded, uploaded or is
+   different, and changes nothing until you confirm. Nothing local is deleted.
+
+Revoke a lost device from the device list on any connected device. Changing
+`SYNC_SETUP_KEY` only stops new enrolments; it doesn't affect connected
+devices or the Unbound save fetch, and vice versa.
+
+**Recovery**
+
+- Keep using **Backup & restore** (`/backup`): it is independent of sync.
+- Data lost on one device: connect it again (pairing code); it downloads
+  everything. Or restore a backup there first; restoring never deletes, and
+  what you restore uploads on the next sync (deleted items you restore come
+  back – skip them in the restore preview if you don't want that).
+- Recovery key lost but a device is still connected: *Show recovery key*.
+- Recovery key exposed, or every device and the key lost: back up each device,
+  then *Erase the synced copy* (setup key required) and set up again from the
+  device with the best data. If no device and no key remain, the synced copy
+  can't be decrypted – restore from a backup file.
+
+Tests: `npm test` (sync suites in `test/sync/`; the Redis Lua scripts are
+exercised when `redis-server` is installed locally, skipped otherwise).
+
 ### Alternatives
 
 There are a lot of alternatives out there, and whilst they don't meet

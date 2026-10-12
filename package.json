@@ -12,7 +12,8 @@
     "test:league": "deno run --allow-read ./api/static/league/validate.ts",
     "test:unbound": "node --test 'test/unbound/*.test.mjs'",
     "test:history": "node --test 'test/history/*.test.mjs'",
-    "test": "node --test 'test/unbound/*.test.mjs' 'test/history/*.test.mjs'"
+    "test:sync": "node --test 'test/sync/*.test.mjs'",
+    "test": "node --test 'test/unbound/*.test.mjs' 'test/history/*.test.mjs' 'test/sync/*.test.mjs'"
   },
   "devDependencies": {
     "@iconify-icons/mdi": "^1.2.34",

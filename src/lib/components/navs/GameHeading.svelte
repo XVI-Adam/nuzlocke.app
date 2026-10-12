@@ -25,6 +25,7 @@
   }
 
   import ThemeToggle from '$lib/components/theme-toggle.svelte'
+  import SyncIndicator from '$lib/components/Sync/SyncIndicator.svelte'
   import { Icon, Logo, Button, Popover } from '$lib/components/core'
   import { Box, Save, Game, Grave, Sync, File, Caret, CaretRight, Dots } from '$icons'
 
@@ -126,6 +127,7 @@
                 Archive your <b>{game?.name || ''}</b> run and start attempt {+(game?.attempts || 1) + 1}
               </p>
               <a href="/history" class="text-sm underline">Attempt history</a>
+              <a href="/devices" class="text-sm underline">Device sync</a>
             </li>
           </ul>
         </Popover>
@@ -134,7 +136,8 @@
 
     {#if $page.url.pathname !== '/graveyard'}<MiniTeamController />{/if}
 
-    <span class="relative inline-flex">
+    <span class="relative inline-flex items-center">
+      <SyncIndicator />
       <ThemeToggle />
 
       {#each pages as p}

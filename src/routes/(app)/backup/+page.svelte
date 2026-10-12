@@ -121,6 +121,10 @@
         On iPhone, Safari can clear site data for sites you haven’t opened in a while. Adding the app to your Home Screen
         and keeping a recent backup protects you.
       </p>
+      <p class="text-sm opacity-75">
+        For automatic syncing between devices, use <a class="underline" href="/devices">Device sync</a>. Backups stay
+        independent of it: restoring one never deletes anything, and a synced device uploads what you restore.
+      </p>
     </header>
 
     <section class="nz-card flex flex-col gap-y-3" aria-labelledby="dl">

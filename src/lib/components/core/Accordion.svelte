@@ -34,6 +34,9 @@
   </span>
   <slot name="heading" />
 </button>
+<!-- Controls that belong in the header but can't live inside its <button>
+     (buttons and links can't be nested). Positioned by the caller. -->
+<slot name="actions" {toggle} {isOpen} />
 
 {#if !jsenabled || isOpen}
   <div
