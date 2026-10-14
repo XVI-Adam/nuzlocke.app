@@ -12,14 +12,11 @@ import { activeUnboundSlot, findActiveSectionById } from './vendor/puse/sections
 import { decodeText, getParty } from './vendor/puse/party.js'
 import { getMonBufferAndOffset, getPcBox, loadPcContext } from './vendor/puse/pc.js'
 import { countBadges, isChampion, readEventFlag } from './vendor/puse/gameProgress.js'
-import {
-  computeExpertLevelCapFromProgress,
-  computeNormalLevelCapFromProgress
-} from './vendor/puse/levelCap.js'
 import { readMoney } from './vendor/puse/money.js'
 import { ru8, ru16, ru32 } from './vendor/puse/binary.js'
 import names from './vendor/puse/names.data.js'
 import { describeSpecies } from './species.js'
+import { snapshotCap } from './caps.js'
 
 // 2: species gains form/formKey/label; party mons gain `status`
 export const SNAPSHOT_SCHEMA = 2
@@ -328,9 +325,11 @@ export function parseUnboundSave(bytes) {
       progress: {
         badges,
         champion,
+        // Both app difficulties share the documented "Difficult and higher"
+        // table (caps.js); kept as two keys so stored snapshots keep their shape
         levelCap: {
-          normal: computeNormalLevelCapFromProgress(progress),
-          expert: computeExpertLevelCapFromProgress(progress)
+          normal: snapshotCap(progress),
+          expert: snapshotCap(progress)
         },
         money: readMoney(buf)
       },

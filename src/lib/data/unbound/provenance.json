@@ -1,0 +1,73 @@
+{
+  "$comment": "Where each piece of static Unbound game data comes from and how far it has been verified. Player/run data never goes here. Checked by test/data/unbound-contract.test.mjs.",
+  "gameVersion": "2.1.1.1",
+  "datasets": {
+    "routes": {
+      "files": ["src/lib/data/routes.json#unbound", "src/lib/data/routes.json#unbound_exp"],
+      "description": "Route order, per-location encounter species lists and boss placement",
+      "source": "Inherited from upstream nuzlocke.app (domtronn/nuzlocke.app); original source not recorded",
+      "method": "inherited",
+      "gameVersion": "unknown",
+      "lastUpdated": "2023-03-30",
+      "status": "unverified",
+      "notes": "Species lists only (no method, levels or rates). Route names are tracker record keys - see test/data/unbound-route-keys.json."
+    },
+    "bosses": {
+      "files": [
+        "src/lib/data/league.json#unbound",
+        "static/api/league/unbound.{fire,grass,water}.json",
+        "static/api/league/unbound_exp.{fire,grass,water}.json"
+      ],
+      "description": "Gym leaders, rivals (starter variants), Elite Four, Champion, Ruin/Shadow admins, Successor Maxima - Normal and Expert",
+      "source": "Inherited from upstream nuzlocke.app; cards cite https://www.pokecommunity.com/showthread.php?t=382178 only",
+      "method": "inherited",
+      "gameVersion": "unknown",
+      "lastUpdated": "2023-03-30",
+      "status": "unverified",
+      "notes": "static/api/league files are generated from league.json (forms dropped from names); the contract test checks they match."
+    },
+    "patches": {
+      "files": ["src/lib/data/patches.json#unbound"],
+      "description": "Unbound-specific moves (Hidden Power types, Leech Fang, Metal Bash) and abilities (Portal Power, Royal Roar, Cotton Cloud, Bellow)",
+      "source": "Inherited from upstream nuzlocke.app; original source not recorded",
+      "method": "inherited",
+      "gameVersion": "unknown",
+      "status": "unverified",
+      "notes": "Species, item and fakemon patches are empty: the tracker uses unmodified base species data."
+    },
+    "levelCaps": {
+      "files": ["src/lib/data/unbound/level-caps.data.js"],
+      "description": "Capped Exp. Share level caps for Difficult and higher (used for both Normal and Expert runs)",
+      "sources": [
+        {
+          "name": "Pokémon Unbound Wiki - Level Cap",
+          "url": "https://pokemonunbound.miraheze.org/wiki/Level_Cap",
+          "license": "CC BY-SA 4.0",
+          "revision": "oldid 17810, last edited 2026-02-04",
+          "retrieved": "2026-10-14"
+        },
+        {
+          "name": "PokeCoders - Level Caps in Pokemon Unbound Explained",
+          "url": "https://www.pokemoncoders.com/level-caps-in-pokemon-unbound/",
+          "license": "All rights reserved (facts only used)",
+          "revision": "published 2025-05-14, editor update June 2026",
+          "retrieved": "2026-10-14"
+        }
+      ],
+      "method": "documented",
+      "gameVersion": "2.1.x (sources do not name a version)",
+      "status": "verified-by-two-sources",
+      "notes": "Both sources give identical values for 0-8 badges and the post-Tarmigan cap (45); the wiki says caps are removed at Champion. PokeCoders names the milestone 'Tarmigan Mountain', the wiki 'Tarmigan Mansion' (routes.json places Successor Maxima at 'Tramigan Mansion'; not yet confirmed to be the trigger). The sources may not be independent. No documented save flag for the milestone, so the app shows both values at 4 badges. Replaces PUSE's unsourced tables; PUSE's 'normal' table matched except for the missing milestone, and its 'expert' table contradicted both sources."
+    },
+    "speciesNames": {
+      "files": ["src/lib/unbound/species.data.js", "src/lib/unbound/vendor/puse/*"],
+      "description": "Save species ids -> names/forms, save layout",
+      "source": "PUSE https://github.com/Zannael/PUSE @ 77ee0c0bef31e1c0c640881a991b339e2f00e388",
+      "license": "MIT",
+      "method": "vendored",
+      "gameVersion": "2.1.0-2.1.1.1 (save signature 0x01121999)",
+      "status": "verified-against-fixture-saves",
+      "notes": "PUSE's levelCap.js / unboundLevelCaps data are no longer used (see levelCaps)."
+    }
+  }
+}

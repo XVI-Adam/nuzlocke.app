@@ -10,8 +10,9 @@
   import { readBaseline } from '$lib/unbound/baseline'
   import { syncAge } from '$lib/unbound/freshness'
   import { DEFAULT_GRAVEYARD_BOX } from '$lib/unbound/diff'
+  import { levelCapFor, overCap as findOverCap, capLabel } from '$lib/unbound/caps'
 
-  export let runId, gameKey
+  export let runId
 
   const BADGE_COUNT = 8 // Unbound has eight gyms
   const OPEN_KEY = 'nuzlocke.unbound.panel'
@@ -41,10 +42,13 @@
   }
 
   $: snapshot = baseline?.snapshot
-  $: capProfile = gameKey === 'unbound_exp' ? 'expert' : 'normal'
-  $: cap = snapshot?.progress.levelCap[capProfile]
+  // Computed from badges rather than the stored snapshot value, so saves
+  // accepted before the documented cap table still show the right cap
+  $: capInfo = snapshot ? levelCapFor(snapshot.progress) : null
+  $: cap = capInfo?.cap
+  $: capTop = capInfo ? capInfo.upTo ?? capInfo.cap : null
   $: age = baseline ? syncAge(baseline.acceptedAt) : null
-  $: overCap = snapshot ? snapshot.party.filter((m) => m.level > cap) : []
+  $: ({ over: overCap, maybeOver } = findOverCap(snapshot?.party, capInfo))
   $: graveyard = snapshot?.boxes.find((b) => b.box === DEFAULT_GRAVEYARD_BOX)?.mons.length ?? 0
 </script>
 
@@ -78,7 +82,7 @@
       {#if !open}
         <div class="mt-1 flex flex-wrap items-center gap-x-1" data-testid="live-panel-collapsed">
           {#each snapshot.party as m (m.pid)}<MonIcon speciesId={m.species.id} shiny={m.shiny} small />{/each}
-          <span class="ml-1 shrink-0 text-xs opacity-75">{snapshot.progress.badges}/{BADGE_COUNT} badges · cap {cap}</span>
+          <span class="ml-1 shrink-0 text-xs opacity-75">{snapshot.progress.badges}/{BADGE_COUNT} badges · cap {capLabel(capInfo)}</span>
         </div>
       {:else}
         <div transition:slide|local={{ duration: 200 }}>
@@ -98,20 +102,25 @@
               </dd>
             </div>
             <div>
-              <dt class="text-xs opacity-60">Level cap ({capProfile})</dt>
-              <dd>{snapshot.progress.champion ? 'None (champion)' : cap} · ₽{snapshot.progress.money.toLocaleString()}</dd>
+              <dt class="text-xs opacity-60">Level cap</dt>
+              <dd>{capLabel(capInfo)} · ₽{snapshot.progress.money.toLocaleString()}</dd>
             </div>
           </dl>
 
-          {#if overCap.length && !snapshot.progress.champion}
+          {#if overCap.length}
             <p class="mt-2 rounded border border-red-500 px-2 py-1 text-xs text-red-600 dark:text-red-400" role="alert">
-              Over the level cap of {cap}: {overCap.map((m) => `${m.nickname} (Lv ${m.level})`).join(', ')}
+              Over the level cap of {capTop}: {overCap.map((m) => `${m.nickname} (Lv ${m.level})`).join(', ')}
+            </p>
+          {/if}
+          {#if maybeOver.length}
+            <p class="mt-2 rounded border border-yellow-500 px-2 py-1 text-xs" data-testid="live-panel-maybe-over">
+              Over {cap} - fine only if {capInfo.milestone.label} is done: {maybeOver.map((m) => `${m.nickname} (Lv ${m.level})`).join(', ')}
             </p>
           {/if}
 
           <div class="mt-2 grid grid-cols-2 gap-1.5 lg:grid-cols-3">
             {#each snapshot.party as mon (mon.pid)}
-              <PartyMon {mon} cap={snapshot.progress.champion ? null : cap} compact />
+              <PartyMon {mon} cap={capTop} compact />
             {/each}
           </div>
 

@@ -3,9 +3,9 @@
   import PartyMon from '$lib/components/Unbound/PartyMon.svelte'
   import MonIcon from '$lib/components/Unbound/MonIcon.svelte'
   import { describeSpecies } from '$lib/unbound/species'
+  import { levelCapFor, capLabel } from '$lib/unbound/caps'
 
   export let snapshot,
-    capProfile = 'normal',
     graveyardBox = 24
 
   const pad = (n) => String(n).padStart(2, '0')
@@ -14,7 +14,9 @@
   $: graveyard = boxes.find((b) => b.box === graveyardBox)?.mons || []
   $: stored = boxes.filter((b) => b.box !== graveyardBox && b.mons.length)
   $: boxTotal = stored.reduce((n, b) => n + b.mons.length, 0)
-  $: cap = progress.levelCap[capProfile]
+  $: capInfo = levelCapFor(progress)
+  // Only flag mons that are over the cap whichever side of a milestone the run is
+  $: cap = capInfo.upTo ?? capInfo.cap
 </script>
 
 <section class="flex flex-col gap-y-4" data-testid="save-preview">
@@ -31,7 +33,7 @@
       <dd>{playtime.hours}:{pad(playtime.minutes)}:{pad(playtime.seconds)}</dd>
     </div>
     <div><dt class="opacity-60">Badges</dt><dd>{progress.badges}{progress.champion ? ' · Champion' : ''}</dd></div>
-    <div><dt class="opacity-60">Level cap ({capProfile})</dt><dd>{cap}</dd></div>
+    <div><dt class="opacity-60">Level cap</dt><dd>{capLabel(capInfo)}</dd></div>
     <div><dt class="opacity-60">Money</dt><dd>₽{progress.money.toLocaleString()}</dd></div>
     <div><dt class="opacity-60">PC</dt><dd>{boxTotal} stored · {graveyard.length} in box {graveyardBox}</dd></div>
   </dl>

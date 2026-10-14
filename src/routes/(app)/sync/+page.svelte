@@ -27,7 +27,6 @@
   })
 
   $: isUnbound = Boolean(run?.game?.startsWith('unbound'))
-  $: capProfile = run?.game === 'unbound_exp' ? 'expert' : 'normal'
 
   // The snapshot under review, and the baseline it was compared against
   let snapshot = null,
@@ -167,7 +166,7 @@
     {/if}
 
     {#if snapshot}
-      <Preview {snapshot} {capProfile} {graveyardBox} />
+      <Preview {snapshot} {graveyardBox} />
       <hr />
       <Changes {diff} baseline={comparedTo} {graveyardBox} />
 

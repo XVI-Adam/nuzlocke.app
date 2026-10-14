@@ -70,8 +70,9 @@
   onMount(() => {
     parse((saves) => {
       if (!browser) return
+      // No active run (e.g. opened /game directly): setup() redirects home
       let game = saves[$activeGame]
-      if (!game.id) return
+      if (!game?.id) return
       savedGames.update(
         updateGame({
           ...game,
@@ -156,7 +157,7 @@
           <div class="flex w-full flex-col gap-y-2">
             {#if gameKey?.startsWith('unbound')}
               {#await loadLivePanel() then { default: LivePanel }}
-                <LivePanel {runId} {gameKey} />
+                <LivePanel {runId} />
               {/await}
             {/if}
 
