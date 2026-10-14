@@ -78,8 +78,28 @@
       "method": "inherited",
       "gameVersion": "unknown",
       "lastUpdated": "2023-03-30",
-      "status": "unverified",
-      "notes": "static/api/league files are generated from league.json (forms dropped from names); the contract test checks they match."
+      "status": "checked: see bossChecks",
+      "notes": "static/api/league files are generated from league.json (forms dropped from names); the contract test checks they match. Team data is unchanged by Phase 7; each team is compared with the wiki (bossChecks) and the result shown on its card. The app Normal teams correspond to the wiki Difficult teams (e.g. Mirskle matches exactly). Rival display name corrected to Ace (wiki); keys unchanged."
+    },
+    "bossChecks": {
+      "files": [
+        "src/lib/data/unbound/bosses.verification.data.js"
+      ],
+      "description": "Per boss key: whether the app team matches the wiki team (Normal vs wiki Difficult, Expert vs wiki Expert), with each difference listed",
+      "sources": [
+        {
+          "name": "Pokémon Unbound Wiki (boss and rival pages)",
+          "url": "https://pokemonunbound.miraheze.org",
+          "license": "CC BY-SA 4.0",
+          "revision": "per boss: revid in the data file",
+          "retrieved": "2026-10-14"
+        }
+      ],
+      "method": "documented",
+      "generator": "tools/verify-unbound-bosses.mjs (raw page cache not committed)",
+      "gameVersion": "2.1.x (wiki pages do not name a version)",
+      "status": "main story: 24 of 60 teams match; 36 differ (listed); post-game (lr5) not checked",
+      "notes": "Read-only comparison: league.json is not changed. The wiki itself has typos (Fail, Dazzling Geam, Below), which the comparison ignores; it notes rival battles follow Level Scaling, so rival levels and evolutions can legitimately differ. Typeless wiki Hidden Power matches any hidden-power-* move."
     },
     "patches": {
       "files": [

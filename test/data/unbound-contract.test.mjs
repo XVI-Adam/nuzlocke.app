@@ -210,3 +210,21 @@ test('met-location ids map to existing route keys', () => {
     assert.equal(typeof loc.confirmed, 'boolean')
   }
 })
+
+// ---- Boss wiki checks (src/lib/data/unbound/bosses.verification.data.js)
+
+const { default: BOSS_CHECKS } = await import('../../src/lib/data/unbound/bosses.verification.data.js')
+const STATUSES = new Set(['verified', 'differs', 'unsupported', 'post-game'])
+
+test('every Unbound boss in both difficulties has a wiki check', () => {
+  for (const game of GAMES) {
+    for (const r of bossesOf(game)) {
+      const c = BOSS_CHECKS.bosses[r.value]
+      assert.ok(c, `${r.value}: no check`)
+      assert.ok(STATUSES.has(c.status), `${r.value}: status ${c.status}`)
+      if (c.status === 'differs') assert.ok(c.diffs?.length, `${r.value}: differs without details`)
+      if (c.status !== 'post-game') assert.ok(Number.isInteger(c.revid) && c.page, `${r.value}: source revision`)
+    }
+  }
+  assert.equal(BOSS_CHECKS.license, 'CC BY-SA 4.0')
+})

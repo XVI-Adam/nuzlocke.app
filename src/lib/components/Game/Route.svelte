@@ -113,6 +113,9 @@
     game.store.update(patch({ __starter: starter }))
   }
 
+  /** Sets the starter (rival teams) as if picked in the starter selector */
+  export const usestarter = (value) => setstarter({ detail: { value } })
+
   export const setnav = (e) =>
     setloc(`boss-${e.detail.value}`, e.detail.value + 20)
 
@@ -229,6 +232,7 @@
         class="boss -mb-4 md:my-2"
         class:hidden={hidden || !showGym(p, filters)}
         id="boss-{id}"
+        data-boss={p.value}
         in:fade
         out:fade={{ duration: 100 }}
       >
@@ -239,6 +243,7 @@
           id={p.value}
           defeated={bossTeamIds.includes(p.value)}
           notes={notesFor($notes, 'bosses', p.value, p.boss || p.name)}
+          check={p.bossCheck}
           location={p.name}
           type={p.group}
         />

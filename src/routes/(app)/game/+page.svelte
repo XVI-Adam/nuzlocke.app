@@ -16,6 +16,8 @@
   import debounce from '$lib/utils/debounce'
 
   import { Expanded as Games } from '$lib/data/games.js'
+  import { readBaseline } from '$lib/unbound/baseline'
+  import { savePosition } from '$lib/unbound/progress'
   import {
     getGameStore,
     read,
@@ -31,6 +33,9 @@
 
   // Unbound-only save panel, loaded on demand so other games are unaffected
   const loadLivePanel = () => import('$lib/components/Unbound/LivePanel.svelte')
+
+  // Unbound: badges/champion from the last accepted save (navigation only)
+  let saveProgress = null
 
   let search = ''
 
@@ -56,8 +61,12 @@
     { label: 'Gym leaders', val: 'gym-leader' },
     { label: 'Elite Four', val: 'elite-four' },
     { label: 'Rival fights', val: 'rival' },
-    { label: 'Evil team', val: 'evil-team' }
+    { label: 'Evil team', val: 'evil-team' },
+    { label: 'Mini-bosses', val: 'mini-boss' }
   ]
+  // Only offer groups this game has (mini-bosses are rare)
+  const bossTabsFor = (routes) =>
+    bossFilters.filter((f) => f.val !== 'mini-boss' || (routes || []).some((r) => r.group === 'mini-boss'))
 
   let route
   const fetchRoute = async (gen) => {
@@ -95,6 +104,8 @@
       gameStore = getGameStore(id)
       gameKey = key
       runId = id
+      if (browser && key?.startsWith('unbound'))
+        saveProgress = readBaseline(id)?.snapshot?.progress || null
 
       fetchRoute(Games[key].pid).then((r) => {
         console.timeEnd('setup')
@@ -132,6 +143,13 @@
       i++
     }
 
+    // Unbound: never point earlier than the accepted save's last badge
+    if (saveProgress) {
+      let s = savePosition(routes, saveProgress)
+      while (s < routes.length && routes[s].type !== 'route') s++
+      if (s > i) i = s
+    }
+
     const r = routes[Math.min(i, routes.length - 1)]
     return { ...r, id: i }
   }
@@ -157,7 +175,15 @@
           <div class="flex w-full flex-col gap-y-2">
             {#if gameKey?.startsWith('unbound')}
               {#await loadLivePanel() then { default: LivePanel }}
-                <LivePanel {runId} />
+                <LivePanel
+                  {runId}
+                  {gameKey}
+                  routes={route}
+                  defeated={(gameData?.__teams || []).map((t) => t.id)}
+                  starter={gameData?.__starter || 'fire'}
+                  on:goto={(e) => document.querySelector(`[data-boss="${e.detail}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+                  on:starter={(e) => routeEl.usestarter(e.detail)}
+                />
               {/await}
             {/if}
 
@@ -178,7 +204,7 @@
               <span transition:slide={{ duration: 250 }}>
                 <Tabs
                   name="bosses"
-                  tabs={bossFilters}
+                  tabs={bossTabsFor(route)}
                   bind:selected={bossFilter}
                 />
               </span>

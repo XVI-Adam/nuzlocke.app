@@ -79244,7 +79244,7 @@
       "name": "Frozen Heights",
       "value": "r1",
       "group": "rival",
-      "boss": "Rival Axelrod"
+      "boss": "Rival Ace"
     },
     {
       "type": "route",
@@ -79300,7 +79300,7 @@
       "name": "Icicle Cave",
       "value": "r2",
       "group": "rival",
-      "boss": "Rival Axelrod"
+      "boss": "Rival Ace"
     },
     {
       "type": "route",
@@ -79672,7 +79672,7 @@
       "name": "Frost Mountain",
       "value": "r3",
       "group": "rival",
-      "boss": "Rival Axelford"
+      "boss": "Rival Ace"
     },
     {
       "type": "route",
@@ -79982,7 +79982,7 @@
       "name": "Route 12",
       "value": "r4",
       "group": "rival",
-      "boss": "Rival Axelford"
+      "boss": "Rival Ace"
     },
     {
       "type": "route",
@@ -80520,7 +80520,7 @@
       "name": "Magnolia Town",
       "value": "r5",
       "group": "rival",
-      "boss": "Rival Axelford"
+      "boss": "Rival Ace"
     },
     {
       "type": "route",
@@ -80845,7 +80845,7 @@
       "name": "Frozen Heights",
       "value": "r1_exp",
       "group": "rival",
-      "boss": "Rival Axelrod"
+      "boss": "Rival Ace"
     },
     {
       "type": "route",
@@ -80901,7 +80901,7 @@
       "name": "Icicle Cave",
       "value": "r2_exp",
       "group": "rival",
-      "boss": "Rival Axelrod"
+      "boss": "Rival Ace"
     },
     {
       "type": "route",
@@ -81273,7 +81273,7 @@
       "name": "Frost Mountain",
       "value": "r3_exp",
       "group": "rival",
-      "boss": "Rival Axelford"
+      "boss": "Rival Ace"
     },
     {
       "type": "route",
@@ -81583,7 +81583,7 @@
       "name": "Route 12",
       "value": "r4_exp",
       "group": "rival",
-      "boss": "Rival Axelford"
+      "boss": "Rival Ace"
     },
     {
       "type": "route",
@@ -82121,7 +82121,7 @@
       "name": "Magnolia Town",
       "value": "r5_exp",
       "group": "rival",
-      "boss": "Rival Axelford"
+      "boss": "Rival Ace"
     },
     {
       "type": "route",

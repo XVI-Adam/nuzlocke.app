@@ -8,7 +8,8 @@
     forceVs = false,
     defeated = false,
     reader = false,
-    notes = null // { href, count, open() }: this boss's notes ($lib/history/knowledge)
+    notes = null, // { href, count, open() }: this boss's notes ($lib/history/knowledge)
+    check = null // Unbound: how this team compares with the wiki ($lib/unbound/bosses)
 
   // Core leaader data
   let pokemon = [],
@@ -224,7 +225,8 @@
         {#if levelCap}
           <SettingWrapper let:setting id="level-caps">
             {#if (setting === 1 && (type === 'gym-leader' || type === 'elite-four')) || (setting === 2 && (type === 'gym-leader' || type === 'elite-four' || type === 'rival')) || setting === 3 || forceLevelCap}
-              <Label heading="Lvl cap" body={levelCap} />
+              <!-- Unbound has real level caps (live panel); this is the boss's highest level -->
+              <Label heading={game?.startsWith('unbound') ? 'Ace Lv' : 'Lvl cap'} body={levelCap} />
             {/if}
           </SettingWrapper>
         {/if}
@@ -263,6 +265,29 @@
       slot="item"
       class="mt-8 grid gap-y-10 md:grid-cols-2 md:gap-x-2 lg:grid-cols-2 lg:gap-x-6"
     >
+      {#if check}
+        <div class="boss-check border-gray-200 dark:border-gray-700 md:col-span-2" data-testid="boss-check" data-status={check.status}>
+          {#if check.status === 'verified'}
+            <span class="text-green-700 dark:text-green-400">✓ Matches the wiki's {check.wikiDifficulty} team</span>
+          {:else if check.status === 'differs'}
+            <details>
+              <summary>
+                <span class="text-yellow-700 dark:text-yellow-500">≠ Differs from the wiki's {check.wikiDifficulty} team</span>
+                <span class="opacity-60">in {check.diffs.length} {check.diffs.length === 1 ? 'detail' : 'details'}</span>
+              </summary>
+              <ul class="mt-1 list-disc pl-5">
+                {#each check.diffs as d}<li>{d}</li>{/each}
+              </ul>
+            </details>
+          {:else}
+            <span class="opacity-75">Not checked against the wiki</span>
+          {/if}
+          {#if check.levelScaled}
+            <span class="block opacity-75">Rival levels scale with your party, so levels and evolutions can differ.</span>
+          {/if}
+          <a class="underline opacity-60" href={check.url} target="_blank" rel="noreferrer">Wiki page</a>
+        </div>
+      {/if}
       {#each pokemon as p, id (p.name + id)}
         <Pokemon
           {...p}
@@ -318,6 +343,13 @@
 </div>
 
 <style lang="postcss">
+  /* Unbound: wiki check of the team, above the Pokémon */
+  .boss-check {
+    @apply -mb-6 rounded-lg border-2 px-3 py-2 text-xs;
+  }
+  .boss-check summary {
+    @apply cursor-pointer;
+  }
   /* Notes count on the boss card's Notes button */
   .has-notes {
     @apply text-orange-600;

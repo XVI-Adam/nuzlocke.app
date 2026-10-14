@@ -1,30 +1,45 @@
 <script>
   // Game-page panel showing facts from the run's last accepted save sync.
   // Read-only: it never writes tracker data. Encounters, deaths and other
-  // Nuzlocke decisions stay in the tracker below it.
-  import { onMount } from 'svelte'
+  // Nuzlocke decisions stay in the tracker below it. The next-boss line is a
+  // navigation hint; the starter suggestion only asks the page to apply the
+  // player's choice when they press the button.
+  import { createEventDispatcher, getContext, onMount } from 'svelte'
   import { slide } from 'svelte/transition'
 
   import PartyMon from './PartyMon.svelte'
   import MonIcon from './MonIcon.svelte'
-  import { readBaseline } from '$lib/unbound/baseline'
+  import { readSide } from '$lib/unbound/baseline'
+  import { nextBosses, starterFromSave } from '$lib/unbound/progress'
+  import { aliasFor } from '$lib/unbound/species'
   import { syncAge } from '$lib/unbound/freshness'
   import { DEFAULT_GRAVEYARD_BOX } from '$lib/unbound/diff'
   import { levelCapFor, overCap as findOverCap, capLabel } from '$lib/unbound/caps'
   import { metLabel } from '$lib/unbound/locations'
 
-  export let runId
+  export let runId,
+    gameKey = 'unbound',
+    routes = [], // the run's route list (boss order)
+    defeated = [], // boss ids the player recorded as defeated (__teams)
+    starter = 'fire' // the run's rival-team setting (__starter)
+
+  const dispatch = createEventDispatcher()
+  const { getLeague, getPkmn } = getContext('game')
+  const STARTER_NAME = { fire: 'Gible', water: 'Beldum', grass: 'Larvitar' }
 
   const BADGE_COUNT = 8 // Unbound has eight gyms
   const OPEN_KEY = 'nuzlocke.unbound.panel'
   const pad = (n) => String(n).padStart(2, '0')
 
   let baseline = null,
+    links = {},
     loaded = false,
     open = true
 
   onMount(() => {
-    baseline = readBaseline(runId)
+    const side = readSide(runId)
+    baseline = side.baseline
+    links = side.links
     try {
       open = localStorage.getItem(OPEN_KEY) !== 'closed'
     } catch {
@@ -51,6 +66,31 @@
   $: age = baseline ? syncAge(baseline.acceptedAt) : null
   $: ({ over: overCap, maybeOver } = findOverCap(snapshot?.party, capInfo))
   $: graveyard = snapshot?.boxes.find((b) => b.box === DEFAULT_GRAVEYARD_BOX)?.mons.length ?? 0
+
+  // Next boss after the save's last badge, skipping bosses recorded as defeated
+  $: upcoming = snapshot ? nextBosses(routes, snapshot.progress, defeated) : null
+  $: badgeGoal = snapshot && snapshot.progress.badges < BADGE_COUNT ? `badge ${snapshot.progress.badges + 1}` : 'the Champion'
+  const bossLabel = (r) => r.boss || r.name
+  let aceLevel = null
+  const loadAce = async (value, starterKey) => {
+    aceLevel = null
+    const league = await getLeague(gameKey, starterKey)
+    const levels = (league?.[value]?.pokemon || []).map((p) => Number(p.level)).filter((n) => n > 0)
+    if (upcoming?.next?.value === value) aceLevel = levels.length ? Math.max(...levels) : null
+  }
+  $: upcoming?.next && loadAce(upcoming.next.value, starter)
+
+  // The starter from the save mon the player linked to the Starter record
+  let saveStarter = null
+  const resolveStarter = async (snap, sideLinks) => {
+    const identity = Object.keys(sideLinks).find((k) => sideLinks[k] === 'Starter')
+    const mons = [...snap.party, ...snap.boxes.flatMap((b) => b.mons)]
+    const mon = identity && mons.find((m) => `${m.otId}:${m.pid}` === identity)
+    const alias = mon && aliasFor(mon.species.id)
+    const evoline = alias ? (await getPkmn(alias))?.evoline : null
+    saveStarter = starterFromSave(snap, sideLinks, { aliasOf: aliasFor, evolineOf: () => evoline })
+  }
+  $: snapshot && resolveStarter(snapshot, links)
 </script>
 
 {#if loaded}
@@ -84,6 +124,9 @@
         <div class="mt-1 flex flex-wrap items-center gap-x-1" data-testid="live-panel-collapsed">
           {#each snapshot.party as m (m.pid)}<MonIcon speciesId={m.species.id} shiny={m.shiny} small />{/each}
           <span class="ml-1 shrink-0 text-xs opacity-75">{snapshot.progress.badges}/{BADGE_COUNT} badges · cap {capLabel(capInfo)}</span>
+          {#if upcoming?.next}
+            <button class="ml-1 text-xs underline" on:click={() => dispatch('goto', upcoming.next.value)}>next: {bossLabel(upcoming.next)}</button>
+          {/if}
         </div>
       {:else}
         <div transition:slide|local={{ duration: 200 }}>
@@ -107,6 +150,37 @@
               <dd>{capLabel(capInfo)} · ₽{snapshot.progress.money.toLocaleString()}</dd>
             </div>
           </dl>
+
+          {#if upcoming?.next}
+            <div class="mt-2 rounded border border-gray-300 px-2 py-1 dark:border-gray-600" data-testid="live-panel-next">
+              <div class="flex flex-wrap items-center justify-between gap-x-2">
+                <span>
+                  <b>Next boss</b>
+                  {bossLabel(upcoming.next)} <span class="opacity-60">· {upcoming.next.name}</span>
+                  {#if aceLevel}
+                    <span class="opacity-75">· ace Lv {aceLevel}</span>
+                    {#if capTop != null && aceLevel > capTop}<span class="text-yellow-700 dark:text-yellow-500">(above your cap {capTop})</span>{/if}
+                  {/if}
+                </span>
+                <button class="min-h-[2rem] text-xs underline" on:click={() => dispatch('goto', upcoming.next.value)}>Show card</button>
+              </div>
+              {#if upcoming.upcoming.length > 1}
+                <p class="text-xs opacity-75">
+                  Then, before {badgeGoal}: {upcoming.upcoming.slice(1).map(bossLabel).join(' · ')}
+                </p>
+              {/if}
+              <p class="text-xs opacity-60">From your badges and the bosses you've recorded as defeated.</p>
+            </div>
+          {:else if snapshot.progress.champion}
+            <p class="mt-2 text-xs" data-testid="live-panel-next">Champion - main story complete.</p>
+          {/if}
+
+          {#if saveStarter && saveStarter !== starter}
+            <p class="mt-2 rounded border border-yellow-500 px-2 py-1 text-xs" data-testid="live-panel-starter">
+              Your save's Starter is a {STARTER_NAME[saveStarter]}, but rival teams are shown for {STARTER_NAME[starter]}.
+              <button class="ml-1 underline" on:click={() => dispatch('starter', saveStarter)}>Show rival teams for {STARTER_NAME[saveStarter]}</button>
+            </p>
+          {/if}
 
           {#if overCap.length}
             <p class="mt-2 rounded border border-red-500 px-2 py-1 text-xs text-red-600 dark:text-red-400" role="alert">
