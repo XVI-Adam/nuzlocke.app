@@ -243,7 +243,16 @@ export function applyReconciliation({ tracker, side, plan, snapshot, source, acc
 }
 
 function brief(m) {
-  return { pid: m.pid, nickname: m.nickname, speciesId: m.species.id, species: describeSpecies(m.species.id).label, level: m.level, where: m.where }
+  return {
+    pid: m.pid,
+    nickname: m.nickname,
+    speciesId: m.species.id,
+    species: describeSpecies(m.species.id).label,
+    level: m.level,
+    where: m.where,
+    // display only (lib/unbound/locations.js); never used for matching
+    metLocationId: m.met?.locationId ?? null
+  }
 }
 
 function factsOf(m, identity, saveIndex) {

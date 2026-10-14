@@ -2,6 +2,7 @@
   // Preview of how accepting this save updates tracker records. Nothing is
   // written until the player presses Accept on the Sync page.
   import MonIcon from '$lib/components/Unbound/MonIcon.svelte'
+  import { locationFor } from '$lib/unbound/locations'
 
   export let base, // plan without the player's decisions (drives the review list)
     plan, // plan with decisions (what Accept applies)
@@ -21,6 +22,12 @@
     'record-not-active': 'record is no longer Captured/Received/Traded/Shiny'
   }
 
+  // Met location from the save, when its id is mapped (a hint only)
+  const metOf = (mon) => {
+    if (mon.metLocationId == null) return null
+    const loc = locationFor(mon.metLocationId)
+    return loc.known ? loc : null
+  }
   const recordLabel = (key) => {
     const r = tracker[key] || {}
     return `${key}${r.nickname ? ` · ${r.nickname}` : ''}${r.pokemon ? ` (${r.pokemon})` : ''}`
@@ -62,7 +69,7 @@
         {#each base.review as r (r.identity)}
           <li class="flex flex-wrap items-center gap-2">
             <MonIcon speciesId={r.mon.speciesId} small />
-            <span class="min-w-0">{monLabel(r.mon)} · Lv {r.mon.level} · {r.mon.where}
+            <span class="min-w-0">{monLabel(r.mon)} · Lv {r.mon.level} · {r.mon.where}{metOf(r.mon) ? ` · met ${metOf(r.mon).label}${metOf(r.mon).confirmed ? '' : '?'}` : ''}
               <span class="text-xs opacity-60">({r.reason === 'ambiguous' ? 'several possible records' : 'nickname differs'})</span></span>
             <select
               class="h-8 rounded border-2 bg-transparent px-1 text-xs"
@@ -72,7 +79,7 @@
             >
               <option value="">Decide later</option>
               {#each r.candidates as c}
-                <option value={c.key}>Link to {recordLabel(c.key)}{c.nicknameMatch ? ' ✓ nickname' : ''}</option>
+                <option value={c.key}>Link to {recordLabel(c.key)}{c.nicknameMatch ? ' ✓ nickname' : ''}{metOf(r.mon)?.key === c.key ? ' ✓ met here' : ''}</option>
               {/each}
               <option value="__skip">Not in my tracker</option>
             </select>

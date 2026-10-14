@@ -11,6 +11,7 @@
   import { syncAge } from '$lib/unbound/freshness'
   import { DEFAULT_GRAVEYARD_BOX } from '$lib/unbound/diff'
   import { levelCapFor, overCap as findOverCap, capLabel } from '$lib/unbound/caps'
+  import { metLabel } from '$lib/unbound/locations'
 
   export let runId
 
@@ -125,10 +126,10 @@
           </div>
 
           <details class="mt-1">
-            <summary class="cursor-pointer text-xs opacity-75">Moves, items and abilities</summary>
+            <summary class="cursor-pointer text-xs opacity-75">Moves, items, abilities and met locations</summary>
             <ul class="mt-1 text-xs">
               {#each snapshot.party as m (m.pid)}
-                <li><b>{m.nickname}</b> · {m.ability || '-'}{m.item ? ` · @${m.item}` : ''} · {m.moves.join(' / ')}</li>
+                <li><b>{m.nickname}</b> · {m.ability || '-'}{m.item ? ` · @${m.item}` : ''} · {m.moves.join(' / ')}{m.met ? ` · met ${metLabel(m)} Lv ${m.met.level}` : ''}</li>
               {/each}
             </ul>
           </details>

@@ -22,6 +22,7 @@
   import Popover from '$lib/components/core/Popover.svelte'
 
   import { PIcon, Icon } from '$c/core'
+  import { GROUP_LABEL, groupOf, rowText } from '$lib/unbound/encounter-groups'
   import {
     Chevron,
     Add,
@@ -58,7 +59,29 @@
   let search, statusSearch, natureSearch
 
   export let encounters = []
+  // Documented details for this route's species (Unbound; lib/unbound/encounters.js)
+  export let encounterDetails = null
   let encounterItems = []
+
+  const rowsFor = (option) => encounterDetails?.species?.[option?.alias] || null
+  const groupKey = (option) => {
+    const rows = rowsFor(option)
+    return rows ? groupOf(rows[0]) : 'unverified'
+  }
+  const groupLabel = (key) => (key === 'unverified' ? 'Unverified (older app data)' : GROUP_LABEL[key] || key)
+  // Method header above the first visible option of each group (isHidden:
+  // the dupe-clause filter, which comes from the template's settings)
+  const startsGroup = (options, index, isHidden) => {
+    const key = groupKey(options[index])
+    for (let i = index - 1; i >= 0; i--) if (!isHidden(options[i])) return groupKey(options[i]) !== key
+    return true
+  }
+  const detailLines = (option) => {
+    const rows = rowsFor(option)
+    if (!rows) return []
+    const head = groupOf(rows[0])
+    return rows.map((row) => [groupOf(row) !== head ? GROUP_LABEL[groupOf(row)] : '', rowText(row)].filter(Boolean).join(' · ')).filter(Boolean)
+  }
 
   const encounterF = (_) =>
     getPkmns(encounters).then((e) =>
@@ -353,10 +376,13 @@
           {:else}
             {@const fetchSearch = (search && search !== selected) || !suggest}
 
+            {@const grouped = !!encounterDetails && !fetchSearch}
+
             <AutoCompleteV2
               inset={selected ? true : '2.4em'}
               itemF={(_) => (fetchSearch ? getEncounterablePkmn() : encounterF())}
               max={fetchSearch ? 16 : (encounters || []).length}
+              keepOrder={!!encounterDetails}
               on:change={(_) => (search = null)}
               bind:search
               bind:selected
@@ -366,7 +392,7 @@
               class="col-span-2 w-11/12 sm:w-full"
             >
               <span
-                class="flex h-8 items-center px-4 py-5 md:py-6"
+                class={encounterDetails ? 'block px-4 pb-1.5' : 'flex h-8 items-center px-4 py-5 md:py-6'}
                 class:hidden={dupes === 2 &&
                   (missdupes ? misslines : dupelines).has(option?.evoline)}
                 class:dupe={dupes === 1 &&
@@ -375,16 +401,26 @@
                 slot="option"
                 let:option
                 let:label
+                let:index
+                let:options
               >
-                <PIcon
-                  name={option?.sprite}
-                  className="transform -mb-4 -ml-6 -mt-5 -mr-2"
-                />
-                {@html label}
-                {#if dupes === 1 && (missdupes ? misslines : dupelines).has(option?.evoline)}
-                  <span class="dupe__span absolute right-4 text-tiny">dupe</span
-                  >
+                {#if grouped && startsGroup(options, index, (o) => dupes === 2 && (missdupes ? misslines : dupelines).has(o?.evoline))}
+                  <span class="enc-group" data-testid="encounter-group">{groupLabel(groupKey(option))}</span>
                 {/if}
+                <span class:enc-name={encounterDetails} class:contents={!encounterDetails}>
+                  <PIcon
+                    name={option?.sprite}
+                    className="transform -mb-4 -ml-6 -mt-5 -mr-2"
+                  />
+                  {@html label}
+                  {#if dupes === 1 && (missdupes ? misslines : dupelines).has(option?.evoline)}
+                    <span class="dupe__span absolute right-4 text-tiny">dupe</span
+                    >
+                  {/if}
+                </span>
+                {#each encounterDetails ? detailLines(option) : [] as line}
+                  <span class="enc-detail" data-testid="encounter-detail">{line}</span>
+                {/each}
               </span>
 
               <svelte:fragment slot="icon" let:iconClass>
@@ -702,7 +738,7 @@
             <li>
               <a
                 href={infolink}
-                title="Pokémon DB Link for {location}"
+                title="Route info for {location}"
                 rel="noreferrer"
                 target="_blank"
               >
@@ -722,6 +758,17 @@
 </SettingsWrapper>
 
 <style lang="postcss">
+  /* Documented encounter details inside the picker's options (Unbound) */
+  .enc-group {
+    @apply block pt-2 pb-0.5 text-tiny font-bold uppercase tracking-wider opacity-60;
+  }
+  .enc-name {
+    @apply flex h-8 items-center;
+  }
+  .enc-detail {
+    @apply -mt-0.5 block whitespace-normal pl-7 text-tiny leading-4 opacity-75;
+    max-width: 18rem;
+  }
   /* Notes button next to the location name: always visible (no hover needed),
      muted until the route has notes */
   .notes-btn {

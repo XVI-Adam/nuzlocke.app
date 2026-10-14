@@ -133,3 +133,80 @@ test('every Unbound dataset file has a provenance entry', () => {
   for (const f of fs.readdirSync(new URL('../../src/lib/data/unbound/', import.meta.url)))
     if (f !== 'provenance.json') assert.ok(covered.includes(f), `no provenance for src/lib/data/unbound/${f}`)
 })
+
+// ---- Documented encounter tables (src/lib/data/unbound/encounters.data.js)
+
+const { default: ENCOUNTERS } = await import('../../src/lib/data/unbound/encounters.data.js')
+const { default: LOCATIONS } = await import('../../src/lib/data/unbound/locations.data.js')
+const { speciesOrder } = await import('../../src/lib/unbound/encounter-groups.js')
+const { enrichedList } = await import('../../tools/build-unbound-encounters.mjs')
+
+const METHODS = new Set(['grass', 'cave', 'sand', 'walk', 'surf', 'dive', 'old-rod', 'good-rod', 'super-rod', 'rock-smash', 'tree', 'safari', 'gift', 'static', 'special', 'trade', 'egg'])
+const KINDS = new Set(['wild', 'special', 'static', 'gift', 'trade', 'egg'])
+const ALIASES = new Set(POKEMON.map((p) => p.alias))
+const mainStory = (game) => {
+  const routes = ROUTES[game]
+  const champion = routes.findIndex((r) => r.type === 'gym' && r.value.replace(/_exp$/, '') === 'c')
+  return routes.slice(0, champion).filter((r) => r.type === 'route' && r.name !== 'Starter').map((r) => r.name)
+}
+
+test('encounter tables cover every main-story route key and nothing else', () => {
+  for (const game of GAMES) assert.deepEqual(Object.keys(ENCOUNTERS.locations).sort(), mainStory(game).sort(), game)
+})
+
+test('encounter rows are well-formed and use tracker species aliases', () => {
+  const bad = []
+  for (const [key, loc] of Object.entries(ENCOUNTERS.locations)) {
+    assert.ok(Number.isInteger(loc.revid) && loc.page, `${key}: revision`)
+    assert.ok(loc.rows.length, `${key}: no rows`)
+    for (const e of loc.rows) {
+      const at = `${key}${e.area ? ` [${e.area}]` : ''} ${e.species}`
+      if (!ALIASES.has(e.species)) bad.push(`${at}: unknown species`)
+      if (e.kind === 'swarm') {
+        if (e.method !== 'swarm' || e.levels || e.rate) bad.push(`${at}: swarm rows carry no method details`)
+        continue
+      }
+      if (!METHODS.has(e.method)) bad.push(`${at}: method ${e.method}`)
+      if (!KINDS.has(e.kind)) bad.push(`${at}: kind ${e.kind}`)
+      if (e.levels && !(e.levels[0] >= 1 && e.levels[0] <= e.levels[1] && e.levels[1] <= 100)) bad.push(`${at}: levels ${e.levels}`)
+      for (const r of Object.values(e.rate || {})) if (r != null && !(r >= 0 && r <= 100)) bad.push(`${at}: rate ${r}`)
+      if (e.kind === 'wild' && !e.rate) bad.push(`${at}: wild row without rate`)
+    }
+    for (const s of loc.postGame || []) if (!ALIASES.has(s)) bad.push(`${key}: unknown species ${s}`)
+  }
+  assert.deepEqual(bad, [])
+})
+
+// The picker's list (routes.json) and the details must describe the same species
+for (const game of GAMES) {
+  test(`${game}: documented routes list exactly the documented species first, then only older fallbacks`, () => {
+    for (const r of routesOf(game)) {
+      const loc = ENCOUNTERS.locations[r.name]
+      if (!loc) continue
+      const documented = speciesOrder(loc.rows)
+      assert.deepEqual(r.encounters.slice(0, documented.length), documented, `${r.name}: documented species, in picker order`)
+      const fallback = r.encounters.slice(documented.length)
+      assert.equal(new Set(r.encounters).size, r.encounters.length, `${r.name}: duplicates`)
+      for (const s of fallback) {
+        assert.ok(!(loc.postGame || []).includes(s), `${r.name}: ${s} is post-game only`)
+        assert.ok(!documented.some((d) => d === s || d.startsWith(`${s}-`)), `${r.name}: ${s} is documented`)
+      }
+      assert.deepEqual(enrichedList(r.encounters, loc), r.encounters, `${r.name}: routes.json is up to date with the generator`)
+    }
+  })
+}
+
+test('encounter data carries its license and source', () => {
+  assert.equal(ENCOUNTERS.license, 'CC BY-SA 4.0')
+  assert.match(ENCOUNTERS.source, /^https:\/\/pokemonunbound\.miraheze\.org$/)
+})
+
+test('met-location ids map to existing route keys', () => {
+  const keys = new Set(ROUTES.unbound.filter((r) => r.type === 'route').map((r) => r.name))
+  for (const [id, loc] of Object.entries(LOCATIONS)) {
+    assert.ok(Number.isInteger(+id) && +id >= 0 && +id <= 255, `id ${id}`)
+    assert.ok(keys.has(loc.key), `${id}: ${loc.key} is not a route key`)
+    assert.ok(loc.evidence, `${id}: no evidence`)
+    assert.equal(typeof loc.confirmed, 'boolean')
+  }
+})

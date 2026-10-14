@@ -8,6 +8,8 @@
     inset = null
 
   export let debug = false
+  // Keep the items' own order until the player types (default: sorted)
+  export let keepOrder = false
 
   import { slugify } from '$utils/string'
   import { PIcon, Icon } from '$c/core'
@@ -24,9 +26,12 @@
   const debouncedItemF = debouncePromise(itemF, search?.length ? delay : 0)
 
   function filterF(items, search) {
-    const filteredItems = matchSorter(items, search ?? '', {
-      keys: [(item) => labelF(item)]
-    })
+    const filteredItems =
+      keepOrder && !search
+        ? items
+        : matchSorter(items, search ?? '', {
+            keys: [(item) => labelF(item)]
+          })
 
     const slicedItems = filteredItems.slice(0, max)
     return {
@@ -170,7 +175,7 @@
       <div id={acId} style="--mw: {inputEl?.clientWidth}px;" class="results">
         {#if options.length}
           <ul bind:this={listEl}>
-            {#each options as option}
+            {#each options as option, index}
               <li
                 role="option"
                 tabindex="-1"
@@ -182,6 +187,8 @@
                   <slot
                     name="option"
                     {option}
+                    {index}
+                    {options}
                     label={htmlLabel(labelF(option), search)}
                   />
                 {:else}

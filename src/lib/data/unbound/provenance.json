@@ -3,14 +3,69 @@
   "gameVersion": "2.1.1.1",
   "datasets": {
     "routes": {
-      "files": ["src/lib/data/routes.json#unbound", "src/lib/data/routes.json#unbound_exp"],
+      "files": [
+        "src/lib/data/routes.json#unbound",
+        "src/lib/data/routes.json#unbound_exp"
+      ],
       "description": "Route order, per-location encounter species lists and boss placement",
       "source": "Inherited from upstream nuzlocke.app (domtronn/nuzlocke.app); original source not recorded",
       "method": "inherited",
       "gameVersion": "unknown",
       "lastUpdated": "2023-03-30",
       "status": "unverified",
-      "notes": "Species lists only (no method, levels or rates). Route names are tracker record keys - see test/data/unbound-route-keys.json."
+      "notes": "Route order and boss placement inherited. Route names are tracker record keys - see test/data/unbound-route-keys.json. The encounter species lists of the 55 documented main-story routes are maintained by tools/build-unbound-encounters.mjs (see encounters): documented species first, grouped by method, then species only the older list had, kept as an unverified fallback (species the wiki lists only post-game were dropped from those lists). Starter and post-game routes keep the inherited lists."
+    },
+    "encounters": {
+      "files": [
+        "src/lib/data/unbound/encounters.data.js",
+        "src/lib/data/routes.json#unbound (encounter lists of documented routes)",
+        "src/lib/data/routes.json#unbound_exp (encounter lists of documented routes)"
+      ],
+      "description": "Main-story encounter species per existing route key (routes.json lists) and their details (method, level range, day/night rate, area, gift/trade/egg/static/special conditions, swarm species), shown in the route encounter picker",
+      "sources": [
+        {
+          "name": "Pokémon Unbound Wiki (per-location pages)",
+          "url": "https://pokemonunbound.miraheze.org",
+          "license": "CC BY-SA 4.0",
+          "revision": "per location: revid in the data file",
+          "retrieved": "2026-10-14"
+        }
+      ],
+      "method": "documented",
+      "generator": "tools/build-unbound-encounters.mjs (raw page cache not committed; rebuild from the recorded revids)",
+      "gameVersion": "2.1.x (wiki pages do not name a version)",
+      "status": "single-source; species sample-checked",
+      "validation": {
+        "secondSource": {
+          "name": "Pokemon Unbound Pokedex (fan site) location pages",
+          "url": "https://www.pokemonunboundpokedex.com/wiki/locations/",
+          "retrieved": "2026-10-14",
+          "sample": [
+            "Route 2",
+            "Dehara City",
+            "Antisis City",
+            "Great Desert",
+            "Ruins of Void",
+            "Cootes Bog",
+            "Victory Road",
+            "Fallshore City"
+          ],
+          "result": "Wild species found by both: Route 2 21/22, Dehara City 9/9, Great Desert 8/8, Ruins of Void 20/20, Fallshore City 10/10, Cootes Bog 12/16, Victory Road 26/35 (the rest are in its post-game area). Antisis City: the wiki page has no wild table while the second source and the legacy list agree on 10 water species - a gap in the wiki. The second source lists species only (no methods, levels or rates), may not be independent of the wiki, and its Route 1 page is clearly wrong (97 species)."
+        },
+        "inGame": "Met species and levels in the player’s local save fixtures fall inside the documented level ranges at the matched locations (test/unbound/locations.test.mjs, skipped without fixtures)."
+      },
+      "notes": "Post-game sections and rows marked post-game are excluded (V1 = main story). Five wiki species-name typos are corrected in the generator; one impossible level range (Magnolia Fields Pelipper 45-40) is kept unknown. Safari Zone rows have no documented rate and one Noctowl night rate is X% on the wiki: both stay unknown. Only forms the wiki names are recorded. Rates are per-method percentages as given by the wiki."
+    },
+    "locations": {
+      "files": [
+        "src/lib/data/unbound/locations.data.js"
+      ],
+      "description": "Save met-location id -> existing route key",
+      "source": "In-game evidence: player save fixtures (local, not committed); each id matched to exactly one location of the documented encounter tables by species line and met level",
+      "method": "in-game evidence",
+      "gameVersion": "2.1.1.1",
+      "status": "evidence-based, unconfirmed",
+      "notes": "No documented id table was found (wiki, Unbound-Cloud, PUSE, PKHeX forks). Ids are not FireRed numbering (99 = Route 4). 15 ids mapped; all others show as Unknown location. Mark an entry confirmed only after checking the in-game summary screen."
     },
     "bosses": {
       "files": [
@@ -27,7 +82,9 @@
       "notes": "static/api/league files are generated from league.json (forms dropped from names); the contract test checks they match."
     },
     "patches": {
-      "files": ["src/lib/data/patches.json#unbound"],
+      "files": [
+        "src/lib/data/patches.json#unbound"
+      ],
       "description": "Unbound-specific moves (Hidden Power types, Leech Fang, Metal Bash) and abilities (Portal Power, Royal Roar, Cotton Cloud, Bellow)",
       "source": "Inherited from upstream nuzlocke.app; original source not recorded",
       "method": "inherited",
@@ -36,7 +93,9 @@
       "notes": "Species, item and fakemon patches are empty: the tracker uses unmodified base species data."
     },
     "levelCaps": {
-      "files": ["src/lib/data/unbound/level-caps.data.js"],
+      "files": [
+        "src/lib/data/unbound/level-caps.data.js"
+      ],
       "description": "Capped Exp. Share level caps for Difficult and higher (used for both Normal and Expert runs)",
       "sources": [
         {
@@ -60,7 +119,10 @@
       "notes": "Both sources give identical values for 0-8 badges and the post-Tarmigan cap (45); the wiki says caps are removed at Champion. PokeCoders names the milestone 'Tarmigan Mountain', the wiki 'Tarmigan Mansion' (routes.json places Successor Maxima at 'Tramigan Mansion'; not yet confirmed to be the trigger). The sources may not be independent. No documented save flag for the milestone, so the app shows both values at 4 badges. Replaces PUSE's unsourced tables; PUSE's 'normal' table matched except for the missing milestone, and its 'expert' table contradicted both sources."
     },
     "speciesNames": {
-      "files": ["src/lib/unbound/species.data.js", "src/lib/unbound/vendor/puse/*"],
+      "files": [
+        "src/lib/unbound/species.data.js",
+        "src/lib/unbound/vendor/puse/*"
+      ],
       "description": "Save species ids -> names/forms, save layout",
       "source": "PUSE https://github.com/Zannael/PUSE @ 77ee0c0bef31e1c0c640881a991b339e2f00e388",
       "license": "MIT",

@@ -2,6 +2,7 @@
   // One party Pokémon from a parsed save snapshot. Read-only game facts.
   import MonIcon from './MonIcon.svelte'
   import { describeSpecies } from '$lib/unbound/species'
+  import { metLabel } from '$lib/unbound/locations'
 
   export let mon,
     cap = null,
@@ -71,6 +72,7 @@
         HP {mon.hp.current}/{mon.hp.max}{mon.ability ? ` · ${mon.ability}` : ''}{mon.nature ? ` · ${mon.nature}` : ''}{mon.item ? ` · @${mon.item}` : ''}
       </div>
       {#if mon.moves?.length}<div class="text-xs opacity-75">{mon.moves.join(' / ')}</div>{/if}
+      {#if mon.met}<div class="text-xs opacity-75" data-testid="party-mon-met">Met: {metLabel(mon)} (Lv {mon.met.level})</div>{/if}
     {/if}
   </div>
 </div>

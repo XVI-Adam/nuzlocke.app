@@ -193,10 +193,11 @@
         <PokemonSelector
           {id}
           {store}
-          infolink={toDbLocation(key, p.name)}
+          infolink={key.startsWith('unbound') ? p.encounterDetails?.url : toDbLocation(key, p.name)}
           notes={notesFor($notes, 'routes', p.name, p.name)}
           location={p.name}
           encounters={p.encounters}
+          encounterDetails={p.encounterDetails}
           on:hide={onhidelocation}
           on:new={onnewlocation}
         />

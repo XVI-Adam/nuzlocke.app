@@ -162,6 +162,16 @@
           </a>
         {/each}
       </p>
+
+      <h2 class="mb-4 text-xl font-bold md:text-2xl">Game data</h2>
+      <p class="whitespace-normal" data-testid="unbound-data-credit">
+        Pokémon Unbound encounter data (methods, levels, rates and conditions)
+        is adapted from the
+        <a class="underline transition hover:text-indigo-400" href="https://pokemonunbound.miraheze.org" rel="noreferrer" target="_blank">Pokémon Unbound Wiki</a>
+        by its contributors, licensed under
+        <a class="underline transition hover:text-indigo-400" href="https://creativecommons.org/licenses/by-sa/4.0/" rel="noreferrer" target="_blank">CC BY-SA 4.0</a>.
+        Level caps are from the same wiki.
+      </p>
     </PixelatedContainer>
   </div>
 </main>
