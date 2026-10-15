@@ -228,3 +228,36 @@ test('every Unbound boss in both difficulties has a wiki check', () => {
   }
   assert.equal(BOSS_CHECKS.license, 'CC BY-SA 4.0')
 })
+
+// ---- Trainer doc checks and prebuilt boss files
+
+const { default: DOC_CHECKS } = await import('../../src/lib/data/unbound/bosses.trainer-doc.data.js')
+
+test('every main-story Normal boss has a trainer-doc check', () => {
+  const champion = ROUTES.unbound.findIndex((r) => r.type === 'gym' && r.value === 'c')
+  for (const r of ROUTES.unbound.slice(0, champion + 1).filter((r) => r.type === 'gym')) {
+    const c = DOC_CHECKS.bosses[r.value]
+    assert.ok(c && ['verified', 'differs', 'unsupported'].includes(c.status), `${r.value}: no doc check`)
+  }
+  assert.equal(DOC_CHECKS.source.gameVersion, '2.1.1.1')
+  assert.match(DOC_CHECKS.source.sha256, /^[0-9a-f]{64}$/)
+})
+
+for (const game of GAMES) {
+  test(`${game}: prebuilt boss files have the same moves as league.json`, () => {
+    const bad = []
+    for (const starter of STARTERS) {
+      for (const [key, boss] of Object.entries(league(game, starter))) {
+        const want = LEAGUE[key].pokemon.filter((p) => !p.starter || p.starter === starter)
+        boss.pokemon.forEach((p, i) => {
+          // prebuilt files name every hidden-power-<type> "Hidden Power"
+          const move = (x) => norm(x).replace(/^hiddenpower.*/, 'hiddenpower')
+          const a = (want[i].moves || []).map(move).join()
+          const b = (p.moves || []).map((m) => move(m.name)).join()
+          if (a !== b) bad.push(`${game}.${starter} ${key} ${want[i].name}: ${a} vs ${b}`)
+        })
+      }
+    }
+    assert.deepEqual(bad, [])
+  })
+}

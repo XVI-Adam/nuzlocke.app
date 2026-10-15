@@ -170,7 +170,8 @@
         <a class="underline transition hover:text-indigo-400" href="https://pokemonunbound.miraheze.org" rel="noreferrer" target="_blank">Pokémon Unbound Wiki</a>
         by its contributors, licensed under
         <a class="underline transition hover:text-indigo-400" href="https://creativecommons.org/licenses/by-sa/4.0/" rel="noreferrer" target="_blank">CC BY-SA 4.0</a>.
-        Level caps are from the same wiki.
+        Level caps are from the same wiki. Boss teams for Difficult are checked
+        against the Pokémon Unbound 2.1.1.1 Trainers Doc (Difficult Bosses).
       </p>
     </PixelatedContainer>
   </div>

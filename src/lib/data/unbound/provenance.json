@@ -78,8 +78,30 @@
       "method": "inherited",
       "gameVersion": "unknown",
       "lastUpdated": "2023-03-30",
-      "status": "checked: see bossChecks",
-      "notes": "static/api/league files are generated from league.json (forms dropped from names); the contract test checks they match. Team data is unchanged by Phase 7; each team is compared with the wiki (bossChecks) and the result shown on its card. The app Normal teams correspond to the wiki Difficult teams (e.g. Mirskle matches exactly). Rival display name corrected to Ace (wiki); keys unchanged."
+      "status": "Normal teams checked against the 2.1.1.1 Difficult trainer doc (see trainerDoc); Expert teams checked against the wiki only (see bossChecks)",
+      "notes": "static/api/league files are generated from league.json (forms dropped from names); the contract test checks they match. The app Normal teams correspond to the Difficult trainer doc (28 of 30 main-story teams match it exactly; the other 2 differ only by misspellings in the doc). Phase 7 corrections: rival Beldum (player chose Larvitar) battles 1-2 use Metal Bash, not Double Iron Bash (trainer doc and wiki agree). Rival display name corrected to Ace (wiki); keys unchanged."
+    },
+    "trainerDoc": {
+      "files": [
+        "src/lib/data/unbound/bosses.trainer-doc.data.js",
+        "src/lib/data/league.json#unbound (corrections only)",
+        "static/api/league/unbound.grass.json (corrections only)"
+      ],
+      "description": "Main-story Normal boss teams compared with (and corrected from) the Difficult trainer doc",
+      "sources": [
+        {
+          "name": "Pokémon Unbound 2.1.1.1 Trainers Doc - Difficult Bosses [WIP] (.xlsx export provided by the player)",
+          "url": "unknown - local export; original link not recorded yet",
+          "license": "unknown (no license stated; only factual team details are used)",
+          "revision": "sha256 22203064d2b7cda9271bd92b1c2ff1f4294bb266f1b9bceba832699d25ca23e1 (no revision metadata in the file)",
+          "retrieved": "2026-10-14"
+        }
+      ],
+      "method": "documented",
+      "generator": "python3 -I tools/xlsx-to-json.py <workbook> <export.json>; node tools/import-unbound-bosses.mjs --difficult <export.json> [--apply] (workbook and export not committed)",
+      "gameVersion": "2.1.1.1",
+      "status": "Normal teams: 28 of 30 match; 2 differ only by doc misspellings (Houndoomite, \"Bad Tantrum\") which were not applied. Expert: not imported - needs the Expert workbook.",
+      "notes": "Workbook marked [WIP]. Sheets used: Gym Leaders, Pokemon League, Rival, Team Shadow Bosses, Team Light Of Ruin Bosses; partner teams in tag battles ignored. Rival levels are not compared or imported (Level Scaling). The doc lists base then Mega ability (\"Lightning Rod -> Intimidate\") and pads empty move slots by repeating a move; both are treated as matching. Corrections are applied only when the doc value is a known move/ability/item id. The post-game Aklove battle (lr5) is out of scope. The per-boss check file is a data record; it is not shown in the app UI."
     },
     "bossChecks": {
       "files": [
@@ -99,7 +121,7 @@
       "generator": "tools/verify-unbound-bosses.mjs (raw page cache not committed)",
       "gameVersion": "2.1.x (wiki pages do not name a version)",
       "status": "main story: 24 of 60 teams match; 36 differ (listed); post-game (lr5) not checked",
-      "notes": "Read-only comparison: league.json is not changed. The wiki itself has typos (Fail, Dazzling Geam, Below), which the comparison ignores; it notes rival battles follow Level Scaling, so rival levels and evolutions can legitimately differ. Typeless wiki Hidden Power matches any hidden-power-* move."
+      "notes": "Read-only comparison: league.json is not changed. The wiki itself has typos (Fail, Dazzling Geam, Below), which the comparison ignores; it notes rival battles follow Level Scaling, so rival levels and evolutions can legitimately differ. Typeless wiki Hidden Power matches any hidden-power-* move. Kept as a data record; not shown in the app UI."
     },
     "patches": {
       "files": [

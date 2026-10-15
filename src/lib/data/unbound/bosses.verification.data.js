@@ -172,8 +172,7 @@ export default {
       "status": "differs",
       "diffs": [
         "[fire] larvitar: level 10 (wiki 13)",
-        "[water] gible: level 10 (wiki 13)",
-        "[grass] beldum: moves tackle/flash/double-iron-bash (wiki Tackle/Flash/Metal Bash)"
+        "[water] gible: level 10 (wiki 13)"
       ]
     },
     "r1_exp": {
@@ -204,8 +203,7 @@ export default {
         "[fire] swinub: moves mud-slap/powder-snow/flail/mud-sport (wiki Tackle/Flail/Powder Snow/Mud Slap)",
         "[water] swinub: moves mud-slap/powder-snow/flail/mud-sport (wiki Tackle/Flail/Powder Snow/Mud Slap)",
         "[water] gible: app lists a move twice (tackle/sand-attack/metal-claw/metal-claw)",
-        "[grass] swinub: moves mud-slap/powder-snow/flail/mud-sport (wiki Tackle/Flail/Powder Snow/Mud Slap)",
-        "[grass] beldum: moves tackle/flash/double-iron-bash (wiki Tackle/Flash/Metal Bash)"
+        "[grass] swinub: moves mud-slap/powder-snow/flail/mud-sport (wiki Tackle/Flail/Powder Snow/Mud Slap)"
       ]
     },
     "r2_exp": {

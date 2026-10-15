@@ -2009,10 +2009,10 @@
             "effect": ""
           },
           {
-            "power": 60,
+            "power": "60",
             "type": "steel",
             "damage_class": "physical",
-            "name": "Double Iron Bash",
+            "name": "Metal Bash",
             "effect": ""
           }
         ],
@@ -2113,10 +2113,10 @@
             "effect": ""
           },
           {
-            "power": 60,
+            "power": "60",
             "type": "steel",
             "damage_class": "physical",
-            "name": "Double Iron Bash",
+            "name": "Metal Bash",
             "effect": ""
           }
         ],

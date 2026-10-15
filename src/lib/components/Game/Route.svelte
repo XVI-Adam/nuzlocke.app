@@ -243,7 +243,7 @@
           id={p.value}
           defeated={bossTeamIds.includes(p.value)}
           notes={notesFor($notes, 'bosses', p.value, p.boss || p.name)}
-          check={p.bossCheck}
+          levelScaled={key.startsWith('unbound') && p.group === 'rival'}
           location={p.name}
           type={p.group}
         />

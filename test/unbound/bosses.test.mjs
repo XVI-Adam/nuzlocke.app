@@ -2,7 +2,6 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 
 import { parseBattles, findBattle, compareTeam } from '../../tools/verify-unbound-bosses.mjs'
-import { bossCheckFor, withBossChecks } from '../../src/lib/unbound/bosses.js'
 
 // ---- Wiki parsing (synthetic page in the wiki's template formats)
 
@@ -111,33 +110,4 @@ test('real differences are reported, including duplicate moves and missing speci
   assert.ok(diffs.some((d) => /floette: held none \(wiki Grass Gem\)/.test(d)))
   assert.ok(diffs.includes('comfey: not in the wiki team'))
   assert.ok(diffs.includes('Rotom: in the wiki team, missing from the app'))
-})
-
-// ---- Attaching checks to the route list
-
-const CHECKS = {
-  source: 'https://pokemonunbound.miraheze.org',
-  bosses: {
-    1: { page: 'Mirskle', revid: 5, wikiDifficulty: 'Difficult', status: 'verified' },
-    r1: { page: 'Ace', revid: 6, wikiDifficulty: 'Difficult', status: 'differs', diffs: ['x'], levelScaled: true },
-    lr5: { status: 'post-game' }
-  }
-}
-const ROUTES = [
-  { type: 'route', name: 'Route 1', encounters: [] },
-  { type: 'gym', name: 'Dresco Town Gym', value: '1', group: 'gym-leader' },
-  { type: 'gym', name: 'Frozen Heights', value: 'r1', group: 'rival' },
-  { type: 'gym', name: 'Ruins of Void', value: 'lr5', group: 'evil-team' }
-]
-
-test('checks attach to bosses only; everything else is unchanged', () => {
-  const out = withBossChecks(ROUTES, CHECKS)
-  assert.equal(out[0], ROUTES[0])
-  assert.equal(out[3], ROUTES[3], 'post-game bosses get no check')
-  assert.deepEqual({ ...out[1], bossCheck: undefined }, { ...ROUTES[1], bossCheck: undefined })
-  assert.equal(out[1].bossCheck.status, 'verified')
-  assert.equal(out[1].bossCheck.url, 'https://pokemonunbound.miraheze.org/wiki/Mirskle')
-  assert.deepEqual(out[2].bossCheck.diffs, ['x'])
-  assert.equal(out[2].bossCheck.levelScaled, true)
-  assert.equal(bossCheckFor('nope', CHECKS), null)
 })
