@@ -160,5 +160,8 @@
      side panel under the fixed nav, so the nav stays usable */
   .notes-panel {
     padding-bottom: env(safe-area-inset-bottom);
+    /* landscape notch (iPhone); 0 everywhere else, so desktop is unchanged */
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
   }
 </style>

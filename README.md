@@ -1,4 +1,184 @@
-# Nuzlock tracker
+# Pokémon Unbound Nuzlocke Companion
+
+A fork of [domtronn/nuzlocke.app](https://github.com/domtronn/nuzlocke.app)
+for one Nuzlocke run of **Pokémon Unbound 2.1.x** played on the Normal
+(*Difficult*) setting. On top of the upstream tracker it adds:
+
+- **Save sync** (`/sync`): read the game's save (Delta on iPhone → Delta Sync
+  → Dropbox, or a `.sav` upload), preview it, and link Pokémon to tracker
+  records. The live panel on the game page shows party, badges, level cap,
+  met locations and the next boss.
+- **Documented data**: level caps, main-story wild encounters (in the
+  encounter picker) and Difficult boss teams, with provenance below.
+- **Attempt history, notes and checklists** (`/history`, `/notes`).
+- **Backup & restore** (`/backup`) and **end-to-end encrypted cross-device
+  sync** (`/devices`).
+
+Everything about a run lives in the browser's `localStorage` on each device.
+The server only fetches the save from Dropbox and stores encrypted sync data.
+
+## Set up
+
+### Environment variables
+
+Copy `.env.example` to `.env` for local development (`npm run dev`) and set
+the same variables in Vercel (Project → Settings → Environment Variables).
+Never commit real values.
+
+| Variable | Needed for | Notes |
+|---|---|---|
+| `UNBOUND_SAVE_URL` | Save fetch | Dropbox shared link to Delta's `GameSave-<rom sha1>-gameSave` file |
+| `UNBOUND_SYNC_KEY` | Save fetch | Random secret, at least 32 characters (`openssl rand -base64 36`) |
+| `SYNC_SETUP_KEY` | Device sync | At least 32 characters and **different** from `UNBOUND_SYNC_KEY` |
+| `KV_REST_API_URL`, `KV_REST_API_TOKEN` (or `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`) | Device sync | Added by the Vercel Marketplace Upstash Redis integration |
+
+Both server features fail closed: a missing or short key makes
+`/api/unbound/save` and `/api/sync/*` answer `503 not-configured` instead of
+running unprotected. Without the Redis variables, `npm run dev` uses a
+temporary in-memory sync store; production reports `not-configured`.
+
+### Save fetch (Delta → Dropbox)
+
+1. In Delta, turn on Delta Sync with Dropbox. Delta stores the save as
+   `Delta Emulator/GameSave-<rom sha1>-gameSave`.
+2. In Dropbox, create a shared link to that file and set it as
+   `UNBOUND_SAVE_URL`. Only `dropbox.com` shared-file links are accepted; the
+   server follows Dropbox redirects only and never returns or logs the link.
+3. On each device, open **Sync** (`/sync`), enter `UNBOUND_SYNC_KEY` once (it
+   is kept in this browser only, under `nuzlocke.unbound.syncKey`; it is
+   never synced or backed up), then *Fetch latest from Dropbox* - or *Choose .sav file*
+   to upload one instead.
+4. Review the preview and changes, then accept. Accepting stores the save as
+   this run's baseline. Linked Pokémon (matched automatically only on a
+   unique same-line nickname match, otherwise by your choice) update only
+   species, nickname, nature and the active team; records are never created,
+   deleted or marked dead.
+
+Supported saves: Unbound 2.1.0–2.1.1.1 (save signature `0x01121999`). PC
+box 24 is treated as the graveyard. Delta updates the Dropbox copy when it
+syncs, so fetch again after Delta has synced.
+
+### Cross-device sync (`/devices`)
+
+Runs, archived attempts, notes, checklists and checklist progress can sync
+between your devices from **Device sync** (`/devices`). It is end-to-end
+encrypted: data is compressed and encrypted (AES-256-GCM, Web Crypto) in the
+browser with a key the server never receives. The server stores only
+ciphertext plus what it needs to sync: item ids (kind + random id), sizes,
+revisions, device names and request times. Theme, user id and the Unbound
+sync key never sync.
+
+**Set up (once, in Vercel)**
+
+1. Storage → Marketplace → *Upstash* → Redis → create a database (free tier
+   is enough) and connect it to this project. This adds `KV_REST_API_URL` and
+   `KV_REST_API_TOKEN` (or `UPSTASH_REDIS_REST_*`) to the environment.
+2. Settings → Environment Variables → add `SYNC_SETUP_KEY` (Production):
+   `openssl rand -base64 36`. It must differ from `UNBOUND_SYNC_KEY`.
+3. Redeploy. Until both are set, `/api/sync/*` answers `503 not-configured`.
+
+**Connect devices**
+
+1. First device: Device sync → *setup key* → review the preview → *Connect
+   and sync*. Save the **recovery key** it shows in a password manager.
+2. Other devices: on a connected device, *Create a pairing code* (single use,
+   15 minutes; it contains the encryption key) and enter it on the new device.
+   Without another device: setup key + recovery key.
+3. Every first connection shows what would be downloaded, uploaded or is
+   different, and changes nothing until you confirm. Nothing local is deleted.
+
+Revoke a lost device from the device list on any connected device. Changing
+`SYNC_SETUP_KEY` only stops new enrolments; it doesn't affect connected
+devices or the Unbound save fetch, and vice versa.
+
+**Recovery**
+
+- Keep using **Backup & restore** (`/backup`): it is independent of sync.
+- Data lost on one device: connect it again (pairing code); it downloads
+  everything. Or restore a backup there first; restoring never deletes, and
+  what you restore uploads on the next sync (deleted items you restore come
+  back – skip them in the restore preview if you don't want that).
+- Recovery key lost but a device is still connected: *Show recovery key*.
+- Recovery key exposed, or every device and the key lost: back up each device,
+  then *Erase the synced copy* (setup key required) and set up again from the
+  device with the best data. If no device and no key remain, the synced copy
+  can't be decrypted – restore from a backup file.
+
+### Backups
+
+**Backup & restore** (`/backup`) downloads one JSON file with every run,
+archived attempt, note and accepted Unbound save on this device (including
+Pokémon nicknames and trainer details from accepted saves - keep it private).
+It never contains the sync key or the save-fetch key.
+
+- Download a backup before big changes (new attempt, restoring, erasing the
+  synced copy) and now and then during a run.
+- Restoring never deletes anything and changes nothing until you press
+  *Apply*. Items that differ are listed; *Keep this device's copy* is the
+  default.
+- On a device connected to sync, whatever you restore uploads on the next
+  sync. Choosing *Use the backup's copy* for an older backup replaces newer
+  progress on your other devices too.
+- Browsers can clear site data (for example Safari after a long period
+  without visiting a site that isn't on the Home Screen). Device sync plus
+  regular backups are the protection; on iPhone, adding the app to the Home
+  Screen helps.
+
+## Data sources and limitations
+
+Provenance for every Unbound dataset is recorded in
+`src/lib/data/unbound/provenance.json` (source, revision, retrieval date and
+verification status). Summary:
+
+| Data | Source | Status |
+|---|---|---|
+| Level caps (Difficult and higher) | [Pokémon Unbound Wiki - Level Cap](https://pokemonunbound.miraheze.org/wiki/Level_Cap) (CC BY-SA 4.0), cross-checked with [PokeCoders](https://www.pokemoncoders.com/level-caps-in-pokemon-unbound/) | Two sources agree |
+| Main-story wild encounters | [Pokémon Unbound Wiki](https://pokemonunbound.miraheze.org) location pages, CC BY-SA 4.0, per-page revision ids in `src/lib/data/unbound/encounters.data.js` | Single source; species sample-checked against a second site |
+| Normal boss teams | *Pokémon Unbound 2.1.1.1 Trainers Doc - Difficult Bosses [WIP]* workbook (local export; original link, author and license not recorded) | 28 of 30 main-story teams match it |
+| Expert boss teams | Inherited from upstream; compared with the wiki only | Not verified |
+| Route list, legacy encounter lists, move/ability patches | Inherited from upstream nuzlocke.app | Not verified |
+| Save format, species ids | [PUSE](https://github.com/Zannael/PUSE) (MIT), vendored in `src/lib/unbound/vendor/puse` | Checked against real saves |
+| Save met-location ids | The player's own saves | 15 ids, unconfirmed in game |
+
+Data adapted from the Pokémon Unbound Wiki stays under CC BY-SA 4.0 (see the
+header of each data file and the in-app Credits page). The code license is in
+`LICENSE`.
+
+**Known limitations**
+
+- Expert boss teams are not imported from an Expert trainer document; 13 of
+  the 30 main-story Expert teams differ from the wiki. The post-game Aklove
+  battle at the Ruins of Void is not verified on either difficulty, and
+  post-game routes aren't covered.
+- Rival levels follow the game's level scaling, so the app's rival levels and
+  evolutions can differ from what you meet.
+- The Difficult trainer workbook is a work in progress and its latest
+  revision can't be confirmed. Two of its values look misspelt (Houndoomite,
+  "Bad Tantrum") and were not applied.
+- Encounter data comes from one source. Species that only the older app data
+  lists are shown as *Unverified*; Antisis City has no wild table on the wiki;
+  Safari Zone rates, one Noctowl night rate and one Pelipper level range are
+  unknown and shown as such.
+- The level cap after Tarmigan Mansion (45) can't be read from the save, so
+  at 4 badges both 40 and 45 are shown.
+- Met locations for unmapped ids show as *Unknown location*.
+- The automated tests don't cover a physical iPhone or the production
+  deployment; check a new deploy by hand (pair two devices, fetch the save)
+  before relying on it.
+
+## Tests
+
+```
+npm test        # node --test over test/data, test/unbound, test/history, test/sync
+npm run lint
+npm run build
+```
+
+Tests that need the player's own save files (kept out of git in
+`test/fixtures/unbound/`) are skipped without them. The Redis Lua scripts are
+exercised when `redis-server` is installed locally, skipped otherwise.
+
+## Upstream: Nuzlocke tracker
 
 This project is designed for tracking Nuzlocke runs, the Pokemon
 you've encountered and their status. But it also provides information
@@ -61,55 +241,6 @@ include the modifications, e.g. `,,100` will modify the defense to
 
 You can find extensive examples of these in the [Nuzlocke.data](https://github.com/domtronn/nuzlocke.data) project.
 
-
-### Cross-device sync (Unbound companion fork)
-
-Runs, archived attempts, notes, checklists and checklist progress can sync
-between your devices from **Device sync** (`/devices`). It is end-to-end
-encrypted: data is compressed and encrypted (AES-256-GCM, Web Crypto) in the
-browser with a key the server never receives. The server stores only
-ciphertext plus what it needs to sync: item ids (kind + random id), sizes,
-revisions, device names and request times. Theme, user id and the Unbound
-sync key never sync.
-
-**Set up (once, in Vercel)**
-
-1. Storage → Marketplace → *Upstash* → Redis → create a database (free tier
-   is enough) and connect it to this project. This adds `KV_REST_API_URL` and
-   `KV_REST_API_TOKEN` (or `UPSTASH_REDIS_REST_*`) to the environment.
-2. Settings → Environment Variables → add `SYNC_SETUP_KEY` (Production):
-   `openssl rand -base64 36`. It must differ from `UNBOUND_SYNC_KEY`.
-3. Redeploy. Until both are set, `/api/sync/*` answers `503 not-configured`.
-
-**Connect devices**
-
-1. First device: Device sync → *setup key* → review the preview → *Connect
-   and sync*. Save the **recovery key** it shows in a password manager.
-2. Other devices: on a connected device, *Create a pairing code* (single use,
-   15 minutes; it contains the encryption key) and enter it on the new device.
-   Without another device: setup key + recovery key.
-3. Every first connection shows what would be downloaded, uploaded or is
-   different, and changes nothing until you confirm. Nothing local is deleted.
-
-Revoke a lost device from the device list on any connected device. Changing
-`SYNC_SETUP_KEY` only stops new enrolments; it doesn't affect connected
-devices or the Unbound save fetch, and vice versa.
-
-**Recovery**
-
-- Keep using **Backup & restore** (`/backup`): it is independent of sync.
-- Data lost on one device: connect it again (pairing code); it downloads
-  everything. Or restore a backup there first; restoring never deletes, and
-  what you restore uploads on the next sync (deleted items you restore come
-  back – skip them in the restore preview if you don't want that).
-- Recovery key lost but a device is still connected: *Show recovery key*.
-- Recovery key exposed, or every device and the key lost: back up each device,
-  then *Erase the synced copy* (setup key required) and set up again from the
-  device with the best data. If no device and no key remain, the synced copy
-  can't be decrypted – restore from a backup file.
-
-Tests: `npm test` (sync suites in `test/sync/`; the Redis Lua scripts are
-exercised when `redis-server` is installed locally, skipped otherwise).
 
 ### Alternatives
 

@@ -50,7 +50,7 @@ const record = (id, location, pokemon, extra = {}) => ({ id, pokemon, status: 1,
 const baseTracker = () => ({
   'Route 1': record(2, 'Route 1', 'larvitar', { nickname: 'Rocky', nature: 'careful' }),
   'Route 2': record(3, 'Route 2', 'zubat'),
-  'Icicle Cave': record(4, 'Icicle Cave', 'sandshrew', { nickname: 'Jewel' }),
+  'Icicle Cave': record(4, 'Icicle Cave', 'sandshrew', { nickname: 'Quartz' }),
   'Route 3': record(5, 'Route 3', 'gastly', { status: 5, nickname: 'Boo', death: { type: 'trainer', lvl: { from: 9, to: 12 } } }),
   'Route 4': record(6, 'Route 4', 'eevee', { status: 4 }), // missed
   __team: ['Route 1'],
@@ -126,7 +126,7 @@ test('records marked Missed are not candidates', () => {
 
 test('missing and duplicated identities are unmatchable', () => {
   const p = plan(
-    snapshot({ party: [partyMon(0, SP.larvitar, 'Rocky'), partyMon(20, SP.zubat, 'ZUBAT', { otId: 0 })], boxes: { 1: [mon(21, SP.sandshrew, 'Jewel'), mon(21, SP.sandshrew, 'Jewel')] } }),
+    snapshot({ party: [partyMon(0, SP.larvitar, 'Rocky'), partyMon(20, SP.zubat, 'ZUBAT', { otId: 0 })], boxes: { 1: [mon(21, SP.sandshrew, 'Quartz'), mon(21, SP.sandshrew, 'Quartz')] } }),
     baseTracker()
   )
   assert.deepEqual(p.unmatchable.map((u) => u.reason).sort(), ['duplicate-identity', 'duplicate-identity', 'missing-identity', 'missing-identity'])
@@ -168,7 +168,7 @@ test('case-only nickname differences keep the tracker spelling', () => {
 })
 
 test('regional form corrects the tracker alias; unmapped forms leave it alone', () => {
-  const a = apply(snapshot({ boxes: { 1: [mon(23, SP.sandshrewAlola, 'Jewel')] } }), baseTracker())
+  const a = apply(snapshot({ boxes: { 1: [mon(23, SP.sandshrewAlola, 'Quartz')] } }), baseTracker())
   assert.equal(a.tracker['Icicle Cave'].pokemon, 'sandshrew-alola')
 
   const tracker = { ...baseTracker(), 'Route 7': record(9, 'Route 7', 'rotom') }
@@ -279,7 +279,7 @@ test('written records match what the encounter component would write', () => {
 })
 
 test('accepting the same save twice changes nothing the second time', () => {
-  const snap = snapshot({ party: [partyMon(11, SP.pupitar, 'Rocky', { nature: 'Careful' }), partyMon(12, SP.zubat, 'ZUBAT')], boxes: { 24: [mon(23, SP.sandshrewAlola, 'Jewel')] } })
+  const snap = snapshot({ party: [partyMon(11, SP.pupitar, 'Rocky', { nature: 'Careful' }), partyMon(12, SP.zubat, 'ZUBAT')], boxes: { 24: [mon(23, SP.sandshrewAlola, 'Quartz')] } })
   const first = apply(snap, baseTracker())
   assert.ok(first.changed)
   const second = apply(snap, first.tracker, first.side)

@@ -4,6 +4,7 @@
   import { onMount } from 'svelte'
   import { buildBackup, parseBackupText, planRestore, applyRestore } from '$lib/history/backup'
   import { KEYS } from '$lib/history/storage'
+  import { loadState } from '$lib/sync/state'
   import { fmtDate } from '$c/History/format'
   import Styles from '$c/History/Styles.svelte'
 
@@ -26,7 +27,16 @@
     skipped = s
     return b
   }
-  onMount(describe)
+  // Restored copies upload from a synced device, so warn before replacing
+  let syncConnected = false
+  onMount(() => {
+    describe()
+    try {
+      syncConnected = !!loadState(localStorage).config?.connected
+    } catch {
+      syncConnected = false
+    }
+  })
 
   const download = () => {
     downloadError = null
@@ -165,6 +175,12 @@
 
         {#if conflicts.length}
           <h3 class="font-bold">Different on this device ({conflicts.length})</h3>
+          {#if syncConnected}
+            <p class="nz-alert text-sm" role="note" data-testid="restore-sync-warning">
+              This device syncs. If you choose “Use the backup’s copy” for an older backup, that copy is uploaded and
+              replaces newer progress on your other devices. Keep this device’s copy unless you’re sure.
+            </p>
+          {/if}
           {#each conflicts as i (i.key)}
             <fieldset class="rounded-lg border-2 border-yellow-500 p-3 text-sm" data-testid="restore-conflict">
               <legend class="px-1 font-medium">{kind(i)}: {i.label}</legend>

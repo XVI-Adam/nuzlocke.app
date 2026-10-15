@@ -38,7 +38,6 @@
     "vite": "^3.2.4"
   },
   "dependencies": {
-    "@google-cloud/bigquery": "^6.1.0",
     "@iconify-icons/emojione-monotone": "^1.2.4",
     "@iconify-icons/fa-solid": "^1.2.4",
     "@iconify-icons/fe": "^1.2.3",
@@ -67,8 +66,7 @@
     "svelte-simple-modal": "^1.1.1",
     "tinyurl": "^1.1.7",
     "tippy.js": "^6.3.7",
-    "vite-plugin-markdown": "^2.1.0",
-    "zod": "^3.21.4"
+    "vite-plugin-markdown": "^2.1.0"
   },
   "prettier": {
     "arrowParens": "always",
