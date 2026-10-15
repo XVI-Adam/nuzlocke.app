@@ -37,7 +37,8 @@
   class:pl-4={open}
   class:left-0={open}
   class:transition={open}
-  class='block md:hidden safe-bottom fixed -bottom-2 duration-500 right-0 pb-8 pt-2 pr-4 text-left pointer-events-none'>
+  style="bottom: calc(var(--tabbar-h) + var(--safe-bottom) - 0.5rem)"
+  class='block md:hidden fixed duration-500 right-0 pb-8 pt-2 pr-4 text-left pointer-events-none'>
   {#if open}
     <div
       class='absolute w-4/5 pointer-events-auto'

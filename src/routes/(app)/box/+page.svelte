@@ -1,4 +1,5 @@
 <script>
+  import ErrorState from '$lib/components/core/ErrorState.svelte'
   import { onMount, getContext } from 'svelte'
   import { fade } from 'svelte/transition'
 
@@ -71,16 +72,22 @@
     })
   })
 
-  let loading = true
+  let loading = true,
+    loadError = false
   let ogbox = [],
     box = [],
     Pokemon = {}
   getBox((b) => {
     ogbox = box = b
-    getPkmns(box.map((i) => i.pokemon)).then((data) => {
-      Pokemon = data
-      loading = false
-    })
+    getPkmns(box.map((i) => i.pokemon))
+      .then((data) => {
+        Pokemon = data
+        loading = false
+      })
+      .catch((e) => {
+        console.error(e)
+        loadError = true
+      })
   })
 
   let type = ''
@@ -225,7 +232,9 @@
   }
 </script>
 
-{#if loading}
+{#if loadError}
+  <ErrorState title="Couldn't load your box" />
+{:else if loading}
   <Loader />
 {:else}
   <div

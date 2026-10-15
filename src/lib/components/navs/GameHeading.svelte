@@ -1,6 +1,7 @@
 <script>
   import { activeGame, savedGames, parse } from '$lib/store'
   import { fade, fly } from 'svelte/transition'
+  import { onMount } from 'svelte'
 
   import { browser } from '$app/environment'
   import { page } from '$app/stores'
@@ -28,6 +29,13 @@
   import SyncIndicator from '$lib/components/Sync/SyncIndicator.svelte'
   import { Icon, Logo, Button, Popover } from '$lib/components/core'
   import { Box, Save, Game, Grave, Sync, File, Caret, CaretRight, Dots } from '$icons'
+
+  // Phones get a bottom tab bar instead of the header links; the body class
+  // reserves room for it (app.postcss)
+  onMount(() => {
+    document.body.classList.add('has-tabbar')
+    return () => document.body.classList.remove('has-tabbar')
+  })
 
   $: pages = [
     { name: 'Game', link: '/game', icon: Game },
@@ -71,6 +79,7 @@
       {#if browser}
         <Popover
           title="Load & manage game saves"
+          className="tap"
           position={window?.innerWidth < 700 ? 'bottom' : 'right'}
         >
           <span class="inline-flex">
@@ -126,8 +135,9 @@
               <p class="text-xs italic leading-4 opacity-50">
                 Archive your <b>{game?.name || ''}</b> run and start attempt {+(game?.attempts || 1) + 1}
               </p>
-              <a href="/history" class="text-sm underline">Attempt history</a>
-              <a href="/devices" class="text-sm underline">Device sync</a>
+              <a href="/history" class="py-1 text-sm underline">Attempt history</a>
+              <a href="/devices" class="py-1 text-sm underline">Device sync</a>
+              <a href="/backup" class="py-1 text-sm underline">Backup & restore</a>
             </li>
           </ul>
         </Popover>
@@ -138,12 +148,12 @@
 
     <span class="relative inline-flex items-center">
       <SyncIndicator />
-      <ThemeToggle />
+      <ThemeToggle className="max-md:min-h-[44px] max-md:min-w-[44px]" />
 
+      <!-- Phones use the bottom tab bar below -->
       {#each pages as p}
         {@const active = p.link == $page.url.pathname}
-        <!-- Icon-only on narrow screens (except the current page) so all links fit -->
-        <a class="link" class:active href={p.link} aria-label={p.name} title={p.name}>
+        <a class="link max-md:!hidden" class:active href={p.link} aria-label={p.name} title={p.name}>
           <Icon inline={true} icon={p.icon} />
           <span class:hidden={!active} class="xl:inline">{p.name}</span>
         </a>
@@ -152,11 +162,53 @@
   </div>
 </nav>
 
+<nav class="tabbar" aria-label="Sections" data-testid="tabbar">
+  {#each pages as p}
+    {@const active = p.link == $page.url.pathname}
+    <a href={p.link} class:active aria-current={active ? 'page' : undefined}>
+      <Icon inline={true} icon={p.icon} height="1.35em" />
+      <span>{p.name}</span>
+    </a>
+  {/each}
+</nav>
+
 <style lang="postcss">
   nav {
     position: fixed;
     z-index: 5000;
     @apply container mx-auto mb-8 bg-black text-white sm:bg-white sm:text-black md:mb-2;
+  }
+  /* Header clears the notch in the installed app */
+  nav:not(.tabbar) {
+    padding-top: var(--safe-top);
+  }
+  nav :global(.tap) {
+    @apply max-md:min-h-[44px] max-md:min-w-[44px] max-md:justify-center;
+  }
+
+  /* Phone bottom tab bar */
+  nav.tabbar {
+    @apply inset-x-0 bottom-0 top-auto mb-0 hidden max-w-none border-t border-gray-700 bg-black text-gray-300;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    height: calc(var(--tabbar-h) + var(--safe-bottom));
+    padding-bottom: var(--safe-bottom);
+  }
+  nav.tabbar::before {
+    display: none;
+  }
+  /* (display set here: a scoped rule would otherwise beat md:hidden) */
+  @media (max-width: 767.98px) {
+    nav.tabbar {
+      display: grid;
+    }
+  }
+  nav.tabbar a {
+    @apply flex min-h-[44px] flex-col items-center justify-center gap-y-0.5 text-[11px] leading-none;
+  }
+  nav.tabbar a.active {
+    @apply text-white;
+    box-shadow: inset 0 2px 0 theme('colors.orange.500');
   }
 
   nav :global(.p-container) {

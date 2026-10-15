@@ -78,7 +78,7 @@
 </script>
 
 <div
-  class="mx-auto inline-flex items-center gap-x-4 md:mt-0.5 md:scale-110 md:transform {$$restProps.class ||
+  class="mx-auto inline-flex items-center gap-x-2 md:mt-0.5 md:gap-x-4 md:scale-110 md:transform {$$restProps.class ||
     ''}"
 >
   {#each mons as p, i}

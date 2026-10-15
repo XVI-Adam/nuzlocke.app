@@ -152,7 +152,7 @@
           </dl>
 
           {#if upcoming?.next}
-            <div class="mt-2 rounded border border-gray-300 px-2 py-1 dark:border-gray-600" data-testid="live-panel-next">
+            <div class="mt-2 rounded-lg border border-gray-300 px-2 py-1 dark:border-gray-600" data-testid="live-panel-next">
               <div class="flex flex-wrap items-center justify-between gap-x-2">
                 <span>
                   <b>Next boss</b>
@@ -176,19 +176,19 @@
           {/if}
 
           {#if saveStarter && saveStarter !== starter}
-            <p class="mt-2 rounded border border-yellow-500 px-2 py-1 text-xs" data-testid="live-panel-starter">
+            <p class="mt-2 rounded-lg border border-yellow-500 px-2 py-1 text-xs" data-testid="live-panel-starter">
               Your save's Starter is a {STARTER_NAME[saveStarter]}, but rival teams are shown for {STARTER_NAME[starter]}.
               <button class="ml-1 underline" on:click={() => dispatch('starter', saveStarter)}>Show rival teams for {STARTER_NAME[saveStarter]}</button>
             </p>
           {/if}
 
           {#if overCap.length}
-            <p class="mt-2 rounded border border-red-500 px-2 py-1 text-xs text-red-600 dark:text-red-400" role="alert">
+            <p class="mt-2 rounded-lg border border-red-500 px-2 py-1 text-xs text-red-600 dark:text-red-400" role="alert">
               Over the level cap of {capTop}: {overCap.map((m) => `${m.nickname} (Lv ${m.level})`).join(', ')}
             </p>
           {/if}
           {#if maybeOver.length}
-            <p class="mt-2 rounded border border-yellow-500 px-2 py-1 text-xs" data-testid="live-panel-maybe-over">
+            <p class="mt-2 rounded-lg border border-yellow-500 px-2 py-1 text-xs" data-testid="live-panel-maybe-over">
               Over {cap} - fine only if {capInfo.milestone.label} is done: {maybeOver.map((m) => `${m.nickname} (Lv ${m.level})`).join(', ')}
             </p>
           {/if}

@@ -26,7 +26,7 @@
 
     <span class="inline-flex items-center gap-x-2">
       <SyncIndicator className="mt-2" />
-      <ThemeToggle className=mt-2 />
+      <ThemeToggle className="mt-2 min-h-[44px] min-w-[44px]" />
     </span>
   </div>
 </nav>
@@ -38,6 +38,7 @@
 
   a {
     @apply border-b-2 ml-4 pb-1 border-b-transparent transition hover:border-b-current;
+    @apply inline-flex min-h-[44px] min-w-[44px] items-center justify-center;
   }
 
 </style>

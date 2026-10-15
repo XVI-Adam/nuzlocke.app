@@ -3,6 +3,21 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Safe areas (notch, home indicator) - non-zero with viewport-fit=cover on iOS.
+   --tabbar-h is the phone bottom tab bar's height on pages that show it. */
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --tabbar-h: 0px;
+}
+@media (max-width: 767.98px) {
+  body.has-tabbar {
+    --tabbar-h: 3.5rem;
+    /* room for the tab bar and the team bar above it */
+    padding-bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 4.5rem);
+  }
+}
+
 /* .ac__dropdown-container { */
 /*   width: calc(200% + theme('spacing.2')) !important; */
 /* } */

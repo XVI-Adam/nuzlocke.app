@@ -624,7 +624,7 @@
 
       <Popover
         title="Open contextual menu"
-        className="absolute top-16 mt-0.5 right-1 sm:top-0 sm:relative "
+        className="absolute top-16 mt-0.5 right-1 sm:top-0 sm:relative max-sm:-mr-[11px] max-sm:-mt-[11px] max-sm:min-h-[44px] max-sm:min-w-[44px] max-sm:justify-center"
       >
         <Icon inline={true} height="1.4em" icon={Dots} class="fill-current" />
 

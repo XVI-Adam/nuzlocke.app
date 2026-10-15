@@ -4,6 +4,7 @@
   import { fade, slide } from 'svelte/transition'
 
   import { Loader, Tabs } from '$lib/components/core'
+  import ErrorState from '$lib/components/core/ErrorState.svelte'
 
   import { SupportBanner } from '$lib/components/navs'
   import { GameRoute, Search } from '$lib/components/Game'
@@ -72,6 +73,7 @@
   const fetchRoute = async (gen) => {
     if (route) return route
     const res = await fetch(`/api/route/${gen}.json`)
+    if (!res.ok) throw new Error(`Route data: ${res.status}`)
     route = await res.json()
     return route
   }
@@ -96,7 +98,7 @@
   })
 
   const setup = () =>
-    new Promise((resolve) => {
+    new Promise((resolve, reject) => {
       console.time('setup')
       const [, key, id] = readdata()
       if (browser && !id) return (window.location = '/')
@@ -107,10 +109,12 @@
       if (browser && key?.startsWith('unbound'))
         saveProgress = readBaseline(id)?.snapshot?.progress || null
 
-      fetchRoute(Games[key].pid).then((r) => {
-        console.timeEnd('setup')
-        resolve(r)
-      })
+      fetchRoute(Games[key].pid)
+        .then((r) => {
+          console.timeEnd('setup')
+          resolve(r)
+        })
+        .catch(reject)
 
       gameStore.subscribe(
         read((game) => {
@@ -190,7 +194,7 @@
             {#if filter === 'nuzlocke'}
               <button
                 transition:slide={{ duration: 250 }}
-                class="inline-flex items-center text-sm"
+                class="inline-flex min-h-[44px] items-center self-start text-sm md:min-h-0"
                 on:click={routeEl.setroute(latestnav(route, gameData))}
               >
                 Continue at {latestnav(route, gameData).name}
@@ -256,6 +260,8 @@
       </main>
     </div>
   </div>
+{:catch}
+  <ErrorState title="Couldn't load this run's routes" />
 {/await}
 
 <style lang="postcss">

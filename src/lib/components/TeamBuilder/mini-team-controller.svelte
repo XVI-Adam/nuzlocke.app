@@ -90,9 +90,9 @@
 </script>
 
 {#await setup() then}
-  <div transition:fade|local={{ delay: 500 }} class="safe-bottom">
+  <div transition:fade|local={{ delay: 500 }}>
     <MiniTeam
-      class="transform max-md:scale-75 md:pl-8 {$$restProps.class || ''}"
+      class="transform md:pl-8 {$$restProps.class || ''}"
       iconKey="pokemon"
       on:add={onteamadd}
       on:swap={onteamswap}
@@ -129,7 +129,7 @@
       title="Clear your team"
       disabled={!mons?.length}
       borderless
-      containerClassName=" rounded-full !border-gray-900 z-50 -translate-x-3/4 md:translate-x-1/2 md:mt-1"
+      containerClassName=" rounded-full !border-gray-900 z-50 ml-1 md:ml-0 md:translate-x-1/2 md:mt-1"
       src={X}
     />
   </div>
@@ -142,7 +142,9 @@
 
   @media (max-width: theme('screens.md')) {
     div {
-      @apply fixed bottom-0 w-full border-t-2 border-gray-200 bg-white/50 pl-6 pt-3 pb-5 backdrop-blur-sm;
+      @apply fixed w-full justify-center border-t-2 border-gray-200 bg-white/50 px-3 pt-3 pb-3 backdrop-blur-sm;
+      /* sits on the phone tab bar (or the home indicator without one) */
+      bottom: calc(var(--tabbar-h) + var(--safe-bottom));
     }
 
     :global(.dark) div {
